@@ -1,3 +1,5 @@
+from ui import GameUI
 
-print("Triggle")
-print("Triggle2")
+game_ui = GameUI()
+game_ui.draw_ui()
+
