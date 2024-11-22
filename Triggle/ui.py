@@ -6,15 +6,26 @@ import tkinter as tk
 class GameUI:
     def __init__(self):
         self.root = tk.Tk() # Prozor
-        self.options_region_width = 400 # Sirina levog dela prozora sa opcijama za igru
+        self.root.resizable(False, False)
+        self.options_region_width = 300 # Sirina levog dela prozora sa opcijama za igru
         self.options_frame = None # Frame u kom se nalaze UI elementi za opcije
         self.table_region_width = 0 # Sirina desnog dela gde je tabla
         self.window_height = 500
         self.side_length_var = tk.IntVar(value=4) # Broj stubica po stranici table
-        self.start_triangle_side = 60 # Pocetna duzina stranice trouglica
-        self.triangle_side_factor = 1 # Faktor za skaliranje pri promeni velicine table, mora da se sredi to i formula ispod
-        self.triangle_side = self.start_triangle_side + int(math.log2(self.side_length_var.get()) * self.triangle_side_factor)
-        self.table_diagonal_length = 6 * self.triangle_side
+
+        # self.start_triangle_side = 40 # Pocetna duzina stranice trouglica
+        # self.triangle_side_factor = 5 # Faktor za skaliranje pri promeni velicine table, mora da se sredi to i formula ispod
+        # self.triangle_side = self.start_triangle_side - self.triangle_side_factor * self.side_length_var.get()
+
+        # hardkodirane duzine stranica trouglica jer nijedna formula iznad ne uspeva lepo da rasporedi
+        self.triangle_sides = {
+            4: 100,
+            5: 85,
+            6: 75,
+            7: 70,
+            8: 65
+        }
+        self.table_diagonal_length = 6 * self.triangle_sides[4]
 
         self.canvas = None
 
@@ -41,21 +52,23 @@ class GameUI:
         self.root.mainloop()
 
     def generate_table(self):
-        self.triangle_side = self.start_triangle_side + int(math.log2(self.side_length_var.get()) * self.triangle_side_factor)
-        self.table_diagonal_length = (self.side_length_var.get() - 1) * 2 * self.triangle_side
-        self.table_region_width = self.table_diagonal_length
+        # self.triangle_side = self.start_triangle_side + int(math.log2(self.side_length_var.get()) * self.triangle_side_factor)
+        self.table_diagonal_length = (self.side_length_var.get() - 1) * 2 * self.triangle_sides[self.side_length_var.get()]
+        # mora malo veci canvas jer je table_diagonal_length za stubice a za pozadinu treba jos malo prostor
+        # i plus jos 20 okolo da ne bude zalepljena tabla uz ivice
+        self.table_region_width = self.table_diagonal_length + 40 + 20
 
         if self.canvas:
             self.canvas.destroy()
 
-        self.canvas = tk.Canvas(self.root, width=self.table_diagonal_length, height=self.table_diagonal_length)
+        self.canvas = tk.Canvas(self.root, width=self.table_region_width, height=self.table_region_width)
         self.canvas.place(x=self.options_region_width, y=0)
 
         self.root.geometry(f"{self.options_region_width + self.table_region_width}x{self.table_region_width}")
 
         center_x = self.table_region_width / 2  # X koordinata centra
-        center_y = self.table_region_width / 2  # Y koordinata centra
-        radius = self.table_diagonal_length / 2  # Poluprečnik
+        center_y = self.table_region_width / 2 # Y koordinata centra
+        radius = self.table_diagonal_length / 2 + 20  # Poluprečnik
 
         # Računanje koordinata tačaka
         points = []
