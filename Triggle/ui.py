@@ -22,12 +22,14 @@ class GameUI:
         self.human_or_computer = None # 1 za coveka, 2 za racunara
         self.x_or_o = None # 1 za X, 2 za O
         self.game_started = False
+        self.pillars = dict() # ovde ce da budu sacuvane oznake
+                              # i koordinate centra stubica npr. (A,1): (x,y)
+                              # ili mozda obrnuto
 
-        # self.start_triangle_side = 40 # Pocetna duzina stranice trouglica
-        # self.triangle_side_factor = 5 # Faktor za skaliranje pri promeni velicine table, mora da se sredi to i formula ispod
-        # self.triangle_side = self.start_triangle_side - self.triangle_side_factor * self.side_length_var.get()
+        self.letters = [] # slova koja odredjuju red stubica
+        self.numbers = [] # brojevi koji odredjuju "kolonu" stubica
+        self.pillar_radius = 10 # poluprecnik stubica
 
-        # hardkodirane duzine stranica trouglica jer nijedna formula iznad ne uspeva lepo da rasporedi
         self.triangle_sides = {
             4: 100,
             5: 85,
@@ -35,8 +37,9 @@ class GameUI:
             7: 70,
             8: 65
         }
-        self.table_diagonal_length = 6 * self.triangle_sides[4]
 
+        self.hexagon_diagonal_length = 6 * self.triangle_sides[4] # dijagonala sestougla koji formiraju stubici, ne pozadine
+        self.hexagon_padding = 30 # razmak od stubica do temena hexagona
         self.canvas = None
 
     def draw_ui(self):
@@ -83,12 +86,13 @@ class GameUI:
 
         self.root.mainloop()
 
+
     def generate_table(self):
-        # self.triangle_side = self.start_triangle_side + int(math.log2(self.side_length_var.get()) * self.triangle_side_factor)
-        self.table_diagonal_length = (self.side_length_var.get() - 1) * 2 * self.triangle_sides[self.side_length_var.get()]
+        self.hexagon_diagonal_length = ((self.side_length_var.get() - 1) * 2 *
+                                        self.triangle_sides[self.side_length_var.get()])
         # mora malo veci canvas jer je table_diagonal_length za stubice a za pozadinu treba jos malo prostor
-        # i plus jos 20 okolo da ne bude zalepljena tabla uz ivice
-        self.table_region_width = self.table_diagonal_length + 40 + 20
+        # i plus jos 50 okolo da ne bude zalepljena tabla uz ivice
+        self.table_region_width = self.hexagon_diagonal_length + 2 * self.hexagon_padding + 50
 
         if self.canvas:
             self.canvas.destroy()
@@ -98,11 +102,18 @@ class GameUI:
 
         self.root.geometry(f"{self.options_region_width + self.table_region_width}x{self.table_region_width}")
 
-        center_x = self.table_region_width / 2  # X koordinata centra
-        center_y = self.table_region_width / 2 # Y koordinata centra
-        radius = self.table_diagonal_length / 2 + 20  # Poluprečnik
+        self.letters = [chr(x+65) for x in range(0, 2 * self.side_length_var.get()-1)]
+        self.numbers = [x + 1 for x in range(0, 2*self.side_length_var.get() - 1)]
 
-        # Računanje koordinata tačaka
+        self.draw_hexagon()
+        self.draw_pillars()
+
+    def draw_hexagon(self):
+        center_x = self.table_region_width / 2  # X koordinata centra
+        center_y = self.table_region_width / 2  # Y koordinata centra
+        radius = self.hexagon_diagonal_length / 2 + self.hexagon_padding  # Poluprečnik
+
+        # Računanje koordinata temena sestougla
         points = []
         for i in range(6):
             angle = math.radians(i * 60)  # Ugao u radijanima
@@ -114,13 +125,64 @@ class GameUI:
         # Crtanje pravilnog šestougla
         self.canvas.create_polygon(points, outline="black", fill="#333", width=2)
 
+    def draw_pillars(self):
+        center_x = self.table_region_width / 2  # X koordinata centra
+        center_y = self.table_region_width / 2  # Y koordinata centra
+        radius = self.hexagon_diagonal_length / 2  # Poluprečnik
+        triangle_side = self.triangle_sides[self.side_length_var.get()] # Duzina stranice trouglica
+        triangle_height = triangle_side * math.sqrt(3) / 2
+        first_x = center_x + radius * math.cos(-2 * math.pi / 3)
+        first_y = center_y + radius * math.sin(-2 * math.pi / 3)
+
+        pillars_in_row_count = self.side_length_var.get()
+
+        for i, letter in enumerate(self.letters):
+            x=first_x
+            y=first_y
+            for j in range(pillars_in_row_count):
+                self.pillars[(letter, j+1)] = (x, y)
+                circle_id = self.canvas.create_oval(x - self.pillar_radius,
+                                        y - self.pillar_radius,
+                                        x + self.pillar_radius,
+                                        y + self.pillar_radius,
+                                        fill="white")
+
+                # Dodeljivanje jedinstvenog taga svakom stubicu
+                tag = f"circle_{letter}_{j+1}"
+                self.canvas.itemconfig(circle_id, tags=(tag,))
+
+                # Vezivanje dogadjaja za klik na stubic
+                self.canvas.tag_bind(tag, "<Button-1>", self.on_pillar_click)
+
+                x+=triangle_side
+
+            first_y += triangle_height
+
+            if i < len(self.letters) // 2:
+                first_x -= triangle_side / 2
+                pillars_in_row_count += 1
+            else:
+                first_x += triangle_side / 2
+                pillars_in_row_count -= 1
+
+    def on_pillar_click(self, event):
+        clicked_item = self.canvas.find_withtag("current")[0]
+        tags = self.canvas.gettags(clicked_item)
+
+        # Pronađi red i kolonu iz taga
+        for tag in tags:
+            if tag.startswith("circle_"):
+                letter, number = tag.split("_")[1:]
+                print(f"Kliknuto na stubic {letter}{number}")
+
+
     def select_human(self):
         self.human_or_computer = 1
-        print("Covek igra prvi") # samo da testiram jel radi
+        print("Covek prvi")
 
     def select_computer(self):
         self.human_or_computer = 2
-        print("Racunar igra prvi")
+        print("Computer prvi")
 
     def select_x(self):
         self.x_or_o = 1
