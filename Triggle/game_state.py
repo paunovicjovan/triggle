@@ -1,17 +1,24 @@
 
-# players positions in format (T1, T2, T3) e.g. (A1, A2, B2)
-x_player_fields = set()
-o_player_fields = set()
 
-# each rubber in format (letter, number, direction) e.g (A, 1, BR)
-# direction can be one of the following: R - Right, BR - Bottom Right, BL - Bottom Left
-rubber_positions = set()
+class GameState:
+    def __init__(self):
+        # pozicije igraca u formatu (T1, T2, T3) npr. ((A,1), (A,2), (B,2))
+        self.x_player_fields = set()
+        self.o_player_fields = set()
 
-# triangle sides in format (start_point, end_point) e.g. ((A,1), (B,2))
-# second point is always Right or Bottom Right or Bottom Left compared to the first point
-completed_sides = set()
+        # svaka razvucena gumica u formatu (slovo, broj, smer) e.g (A, 1, "DD")
+        # smerovi mogu da budu: "D" - Desno, "DD" - Dole Desno, "DL" - Dole Levo
+        self.rubber_positions = set()
 
-# length of table side, e.g. 4 pillars
-table_size = 4
+        # popunjene stranice trouglica u formatu (T1, T2) npr. ((A,1), (B,2))
+        # druga tacka je uvek desno ili dole desno ili dole levo u odnosu na prvu
+        self.completed_sides = set()
 
+        # broj stubica po stranici table
+        self.table_size = 4
 
+        self.human_or_computer = "human" # "human" | "computer"
+        self.x_or_o = "X" # "X" | "O"
+
+        self.letters = []
+        self.numbers = []

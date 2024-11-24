@@ -1,4 +1,4 @@
-import game_state
+from game_state import GameState
 import math
 
 # iskopiraj tcl folder iz foldera gde je python instaliran, u venv
@@ -13,27 +13,33 @@ from tkinter import messagebox
 
 class GameUI:
     def __init__(self):
-        self.root = tk.Tk() # Prozor
+        # Prozor
+        self.root = tk.Tk()
+
+        # stanje igre
+        self.game_state = GameState()
+        self.game_state.human_or_computer = tk.StringVar(value="human") # po defaultu human
+        self.game_state.x_or_o = tk.StringVar(value="X") # po defaultu X
+        self.game_state.letters = [] # slova koja odredjuju red stubica
+        self.game_state.numbers = [] # brojevi koji odredjuju "kolonu" stubica
+
+        # UI atributi
         self.root.resizable(False, False)
         self.options_region_width = 300 # Sirina levog dela prozora sa opcijama za igru
         self.options_frame = None # Frame u kom se nalaze UI elementi za opcije
         self.table_region_width = 0 # Sirina desnog dela gde je tabla
         self.window_height = 600
-        self.side_length_var = tk.IntVar(value=4) # Broj stubica po stranici table
-        self.human_or_computer = None # "human" | "computer"
-        self.x_or_o = None # "X" | "O"
+        self.side_length_var = tk.IntVar(value=self.game_state.table_size) # Broj stubica po stranici table
         self.game_started = False
         self.pillars = dict() # ovde ce da budu sacuvane oznake
                               # i koordinate centra stubica npr. (A,1): (x,y)
-                              # ili mozda obrnuto
+                              # nije u game_state jer je vise stvar vezana za UI zbog pozicije x,y
 
-        self.letters = [] # slova koja odredjuju red stubica
-        self.numbers = [] # brojevi koji odredjuju "kolonu" stubica
         self.pillar_radius = 10 # poluprecnik stubica
-        self.player_radius = 14 # poluprecnik oznake igraca
+        self.player_radius = 12 # poluprecnik oznake igraca
         self.clicked_pillar = None
 
-        self.triangle_sides = {
+        self.triangle_sides = { # duzina stranice trouglica u zavisnosti od broja stubica po stranici
             4: 100,
             5: 85,
             6: 75,
@@ -41,9 +47,10 @@ class GameUI:
             8: 65
         }
 
-        self.hexagon_diagonal_length = 6 * self.triangle_sides[4] # dijagonala sestougla koji formiraju stubici, ne pozadine
+        self.hexagon_diagonal_length = 6 * self.triangle_sides[self.game_state.table_size] # dijagonala sestougla koji formiraju stubici, ne pozadine
         self.hexagon_padding = 30 # razmak od stubica do temena hexagona
         self.canvas = None
+
 
     def draw_ui(self):
         self.root.geometry(f'{self.options_region_width}x{self.window_height}')
@@ -66,18 +73,18 @@ class GameUI:
         # Deo za izbor ko igra prvi covek ili racunar
         title2 = tk.Label(self.options_frame, text="Ko igra prvi:", font=("Emotion Engine Italic", 22))
         title2.place(x=30, y=180)
-        self.human_or_computer = tk.StringVar(value="abc") # mora nesto da se stavi da ne bi bili cekirani
+
         human_radio = tk.Radiobutton(
             self.options_frame,
             text="Covek",
-            variable=self.human_or_computer,
+            variable=self.game_state.human_or_computer,
             value="human",
             font=("Emotion Engine Italic", 18)
         )
         computer_radio = tk.Radiobutton(
             self.options_frame,
             text="Racunar",
-            variable=self.human_or_computer,
+            variable=self.game_state.human_or_computer,
             value="computer",
             font=("Emotion Engine Italic", 18)
         )
@@ -87,18 +94,17 @@ class GameUI:
         #Deo za izbor koji simbol je prvi X ili O
         title3 = tk.Label(self.options_frame, text="Pocetni simbol:", font=("Emotion Engine Italic", 22))
         title3.place(x=30, y=300)
-        self.x_or_o = tk.StringVar(value="abc") # mora nesto da se stavi da nebi bili cekirani
         x_radio = tk.Radiobutton(
             self.options_frame,
             text="X",
-            variable=self.x_or_o,
+            variable=self.game_state.x_or_o,
             value="X",
             font=("Emotion Engine Italic", 18)
         )
         o_radio = tk.Radiobutton(
             self.options_frame,
             text="O",
-            variable=self.x_or_o,
+            variable=self.game_state.x_or_o,
             value="O",
             font=("Emotion Engine Italic", 18)
         )
@@ -131,8 +137,8 @@ class GameUI:
 
         self.root.geometry(f"{self.options_region_width + self.table_region_width}x{self.table_region_width}")
 
-        self.letters = [chr(x+65) for x in range(0, 2 * self.side_length_var.get()-1)]
-        self.numbers = [x + 1 for x in range(0, 2*self.side_length_var.get() - 1)]
+        self.game_state.letters = [chr(x+65) for x in range(0, 2 * self.side_length_var.get()-1)]
+        self.game_state.numbers = [x + 1 for x in range(0, 2*self.side_length_var.get() - 1)]
 
         self.draw_hexagon()
         self.draw_pillars()
@@ -165,7 +171,7 @@ class GameUI:
 
         pillars_in_row_count = self.side_length_var.get()
 
-        for i, letter in enumerate(self.letters):
+        for i, letter in enumerate(self.game_state.letters):
             x=first_x
             y=first_y
             for j in range(pillars_in_row_count):
@@ -187,7 +193,7 @@ class GameUI:
 
             first_y += triangle_height
 
-            if i < len(self.letters) // 2:
+            if i < len(self.game_state.letters) // 2:
                 first_x -= triangle_side / 2
                 pillars_in_row_count += 1
             else:
@@ -209,12 +215,12 @@ class GameUI:
                 print(f"Kliknuto na stubic {letter}{number}")
 
     def start_game(self):
-        if self.human_or_computer.get() == "abc" or self.x_or_o.get() == "abc":
+        if self.game_state.human_or_computer.get() == "abc" or self.game_state.x_or_o.get() == "abc":
             messagebox.showwarning("Upozorenje", "Niste odabrali ko igra prvi i sa kojim simbolom pocinje")
             return
 
-        first_player = "Covek" if self.human_or_computer.get() == "human" else "Racunar"
-        starting_symbol = self.x_or_o.get()
+        first_player = "Covek" if self.game_state.human_or_computer.get() == "human" else "Racunar"
+        starting_symbol = self.game_state.x_or_o.get()
 
         print(f"{first_player} igra prvi koristeci simbol '{starting_symbol}'.")
 
@@ -230,8 +236,8 @@ class GameUI:
     def end_game(self):
         print("Igra je zavrsena")
         self.end_button.place_forget() # sakrije dugme za zavrsetak
-        self.human_or_computer.set("abc") # ocisti radio button
-        self.x_or_o.set("abc")
+        self.game_state.human_or_computer.set("human") # ocisti radio button
+        self.game_state.x_or_o.set("X")
         self.side_length_var.set(4) # resetuje dropdown
         self.game_started = False
 
@@ -251,8 +257,8 @@ class GameUI:
                                 fill=color)
 
         self.canvas.create_text(
-            xc, yc,  # Koordinate centra kružića
-            text="X",  # Tekst koji želiš da prikažeš
-            font=("Arial", 12),  # Font i veličina
-            fill="white"  # Boja teksta
+            xc, yc,
+            text="X",
+            font=("Arial", 10),
+            fill="white"
         )
