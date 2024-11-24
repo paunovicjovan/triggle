@@ -9,7 +9,6 @@ import math
 # 4. (moz da proveris u Font settings u windows dal ga ima za svaki slucaj, al mora da ga ima)
 
 import tkinter as tk
-from tkinter import messagebox
 
 class GameUI:
     def __init__(self):
@@ -17,11 +16,7 @@ class GameUI:
         self.root = tk.Tk()
 
         # stanje igre
-        self.game_state = GameState()
-        self.game_state.human_or_computer = tk.StringVar(value="human") # po defaultu human
-        self.game_state.x_or_o = tk.StringVar(value="X") # po defaultu X
-        self.game_state.letters = [] # slova koja odredjuju red stubica
-        self.game_state.numbers = [] # brojevi koji odredjuju "kolonu" stubica
+        self.game_state = GameState(4)
 
         # UI atributi
         self.root.resizable(False, False)
@@ -29,8 +24,11 @@ class GameUI:
         self.options_frame = None # Frame u kom se nalaze UI elementi za opcije
         self.table_region_width = 0 # Sirina desnog dela gde je tabla
         self.window_height = 600
-        self.side_length_var = tk.IntVar(value=self.game_state.table_size) # Broj stubica po stranici table
-        self.game_started = False
+        # ove promenljive koje se zavrsavaju sa var su za vezane ui elemente
+        # game state svakako ima svoje odgovarajuce atribute
+        self.table_size_var = tk.IntVar(value=self.game_state.table_size) # Broj stubica po stranici table
+        self.human_or_computer_var = tk.StringVar(value="human") # po defaultu human
+        self.x_or_o_var = tk.StringVar(value="X")  # po defaultu X
         self.pillars = dict() # ovde ce da budu sacuvane oznake
                               # i koordinate centra stubica npr. (A,1): (x,y)
                               # nije u game_state jer je vise stvar vezana za UI zbog pozicije x,y
@@ -66,7 +64,7 @@ class GameUI:
 
         # Dropdown meni za izbor dužine stranice
         side_length_options = [4, 5, 6, 7, 8]
-        side_length_dropdown = tk.OptionMenu(self.options_frame, self.side_length_var, *side_length_options)
+        side_length_dropdown = tk.OptionMenu(self.options_frame, self.table_size_var, *side_length_options)
         side_length_dropdown.config(font=("Emotion Engine Italic", 18), padx=10, pady=7)
         side_length_dropdown.place(x=30, y=80)
 
@@ -77,14 +75,14 @@ class GameUI:
         human_radio = tk.Radiobutton(
             self.options_frame,
             text="Covek",
-            variable=self.game_state.human_or_computer,
+            variable=self.human_or_computer_var,
             value="human",
             font=("Emotion Engine Italic", 18)
         )
         computer_radio = tk.Radiobutton(
             self.options_frame,
             text="Racunar",
-            variable=self.game_state.human_or_computer,
+            variable=self.human_or_computer_var,
             value="computer",
             font=("Emotion Engine Italic", 18)
         )
@@ -97,14 +95,14 @@ class GameUI:
         x_radio = tk.Radiobutton(
             self.options_frame,
             text="X",
-            variable=self.game_state.x_or_o,
+            variable=self.x_or_o_var,
             value="X",
             font=("Emotion Engine Italic", 18)
         )
         o_radio = tk.Radiobutton(
             self.options_frame,
             text="O",
-            variable=self.game_state.x_or_o,
+            variable=self.x_or_o_var,
             value="O",
             font=("Emotion Engine Italic", 18)
         )
@@ -116,15 +114,15 @@ class GameUI:
         start_button.place(x=30, y=420)
 
         # Dugme za zavrsetak igre
-        if self.game_started:
+        if self.game_state.game_started:
             self.end_button = tk.Button(self.options_frame, text="Zavrsi igru", command=self.end_game, font=("Emotion Engine Italic", 18), bg="#ff2c2c")
             self.end_button.place(x=30, y=500)
 
         self.root.mainloop()
 
     def generate_table(self):
-        self.hexagon_diagonal_length = ((self.side_length_var.get() - 1) * 2 *
-                                        self.triangle_sides[self.side_length_var.get()])
+        self.hexagon_diagonal_length = ((self.table_size_var.get() - 1) * 2 *
+                                        self.triangle_sides[self.table_size_var.get()])
         # mora malo veci canvas jer je table_diagonal_length za stubice a za pozadinu treba jos malo prostor
         # i plus jos 50 okolo da ne bude zalepljena tabla uz ivice
         self.table_region_width = self.hexagon_diagonal_length + 2 * self.hexagon_padding + 50
@@ -136,9 +134,6 @@ class GameUI:
         self.canvas.place(x=self.options_region_width, y=0)
 
         self.root.geometry(f"{self.options_region_width + self.table_region_width}x{self.table_region_width}")
-
-        self.game_state.letters = [chr(x+65) for x in range(0, 2 * self.side_length_var.get()-1)]
-        self.game_state.numbers = [x + 1 for x in range(0, 2*self.side_length_var.get() - 1)]
 
         self.draw_hexagon()
         self.draw_pillars()
@@ -164,12 +159,12 @@ class GameUI:
         center_x = self.table_region_width / 2  # X koordinata centra
         center_y = self.table_region_width / 2  # Y koordinata centra
         radius = self.hexagon_diagonal_length / 2  # Poluprečnik
-        triangle_side = self.triangle_sides[self.side_length_var.get()] # Duzina stranice trouglica
+        triangle_side = self.triangle_sides[self.table_size_var.get()] # Duzina stranice trouglica
         triangle_height = triangle_side * math.sqrt(3) / 2
         first_x = center_x + radius * math.cos(-2 * math.pi / 3) # x koordinata stubica A1
         first_y = center_y + radius * math.sin(-2 * math.pi / 3) # y koordinata stubica A1
 
-        pillars_in_row_count = self.side_length_var.get()
+        pillars_in_row_count = self.table_size_var.get()
 
         for i, letter in enumerate(self.game_state.letters):
             x=first_x
@@ -215,20 +210,23 @@ class GameUI:
                 print(f"Kliknuto na stubic {letter}{number}")
 
     def start_game(self):
-        if self.game_state.human_or_computer.get() == "abc" or self.game_state.x_or_o.get() == "abc":
-            messagebox.showwarning("Upozorenje", "Niste odabrali ko igra prvi i sa kojim simbolom pocinje")
-            return
-
-        first_player = "Covek" if self.game_state.human_or_computer.get() == "human" else "Racunar"
-        starting_symbol = self.game_state.x_or_o.get()
-
+        # nebitno, samo za test bilo
+        first_player = "Covek" if self.human_or_computer_var.get() == "human" else "Racunar"
+        starting_symbol = self.x_or_o_var.get()
         print(f"{first_player} igra prvi koristeci simbol '{starting_symbol}'.")
+        ###
 
-        self.game_started = True
+        self.game_state = GameState(self.table_size_var.get())
+        self.game_state.human_or_computer = self.human_or_computer_var.get()
+        self.game_state.x_or_o = self.x_or_o_var.get()
+        self.game_state.game_started = True
 
         self.generate_table()
 
+        # test
+        self.occupy_triangle(("B",1), ("A", 1), ("B", 2), "o")
         self.occupy_triangle(("A",1), ("A", 2), ("B", 2), "x")
+        self.draw_rubber(("A", 4),("D", 4))
 
         self.end_button = tk.Button(self.options_frame, text="Zavrsi igru", command=self.end_game, font=("Emotion Engine Italic", 18), bg="#ff2c2c")
         self.end_button.place(x=30, y=500)
@@ -236,10 +234,10 @@ class GameUI:
     def end_game(self):
         print("Igra je zavrsena")
         self.end_button.place_forget() # sakrije dugme za zavrsetak
-        self.game_state.human_or_computer.set("human") # ocisti radio button
-        self.game_state.x_or_o.set("X")
-        self.side_length_var.set(4) # resetuje dropdown
-        self.game_started = False
+        self.human_or_computer_var.set("human") # resetuje radio button
+        self.x_or_o_var.set("X")
+        self.table_size_var.set(4) # resetuje dropdown
+        self.game_state.game_started = False
 
     # t1 je oblika (A,1)
     def occupy_triangle(self, t1, t2, t3, player):
@@ -258,7 +256,48 @@ class GameUI:
 
         self.canvas.create_text(
             xc, yc,
-            text="X",
+            text=player.upper(),
             font=("Arial", 10),
             fill="white"
         )
+
+    def draw_rubber(self, start, end):
+        if start not in self.pillars or end not in self.pillars:
+            print("Nemoguce crtanje gumice, zadati nevalidni stubici")
+            return
+
+        x1, y1 = self.pillars[start]
+        x2, y2 = self.pillars[end]
+        r = self.pillar_radius
+
+        dx = x2 - x1
+        dy = y2 - y1
+
+        theta = math.atan2(dy, dx)
+
+        # Ugao za tangente
+        theta1 = theta + math.pi / 2  # Prva tangenta
+        theta2 = theta - math.pi / 2  # Druga tangenta
+
+        # tacke dodira na prvom stubicu
+        # jedna linija krece odavde
+        t1x1 = x1 + r * math.cos(theta1)
+        t1y1 = y1 + r * math.sin(theta1)
+
+        # druga krece odavde
+        t2x1 = x1 + r * math.cos(theta2)
+        t2y1 = y1 + r * math.sin(theta2)
+
+        # tacke dodira na drugom stubicu
+        # prva linija se zavrsava ovde
+        t1x2 = x2 + r * math.cos(theta1)
+        t1y2 = y2 + r * math.sin(theta1)
+
+        # druga linija se zavrsava ovde
+        t2x2 = x2 + r * math.cos(theta2)
+        t2y2 = y2 + r * math.sin(theta2)
+
+        # crtanje gumice
+        self.canvas.create_line(t1x1, t1y1, t1x2, t1y2, fill="white", width=2)
+        self.canvas.create_line(t2x1, t2y1, t2x2, t2y2, fill="white", width=2)
+
