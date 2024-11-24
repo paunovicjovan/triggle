@@ -17,10 +17,10 @@ class GameUI:
         self.options_region_width = 300 # Sirina levog dela prozora sa opcijama za igru
         self.options_frame = None # Frame u kom se nalaze UI elementi za opcije
         self.table_region_width = 0 # Sirina desnog dela gde je tabla
-        self.window_height = 500
+        self.window_height = 600
         self.side_length_var = tk.IntVar(value=4) # Broj stubica po stranici table
-        self.human_or_computer = None # 1 za coveka, 2 za racunara
-        self.x_or_o = None # 1 za X, 2 za O
+        self.human_or_computer = None
+        self.x_or_o = None
         self.game_started = False
         self.pillars = dict() # ovde ce da budu sacuvane oznake
                               # i koordinate centra stubica npr. (A,1): (x,y)
@@ -66,26 +66,56 @@ class GameUI:
 
         # Deo za izbor ko igra prvi covek ili racunar
         title2 = tk.Label(self.options_frame, text="Ko igra prvi:", font=("Emotion Engine Italic", 22))
-        title2.place(x=30, y=150)
-        human_button = tk.Button(self.options_frame, text="Covek", command=self.select_human, font=("Emotion Engine Italic", 18))
-        computer_button = tk.Button(self.options_frame, text="Racunar", command=self.select_computer, font=("Emotion Engine Italic", 18))
-        human_button.place(x=30, y=200)
-        computer_button.place(x=120, y=200)
+        title2.place(x=30, y=180)
+        self.human_or_computer = tk.StringVar(value="abc") # mora nesto da se stavi da ne bi bili cekirani
+        human_radio = tk.Radiobutton(
+            self.options_frame,
+            text="Covek",
+            variable=self.human_or_computer,
+            value="human",
+            font=("Emotion Engine Italic", 18)
+        )
+        computer_radio = tk.Radiobutton(
+            self.options_frame,
+            text="Racunar",
+            variable=self.human_or_computer,
+            value="computer",
+            font=("Emotion Engine Italic", 18)
+        )
+        human_radio.place(x=30, y=230)
+        computer_radio.place(x=150, y=230)
 
         #Deo za izbor koji simbol je prvi X ili O
-        title3 = tk.Label(self.options_frame, text="X ili O:", font=("Emotion Engine Italic", 22))
-        title3.place(x=30, y=280)
-        x_button = tk.Button(self.options_frame, text="X", command=self.select_x, font=("Emotion Engine Italic", 18), padx=10)
-        x_button.place(x=30, y=330)
-        o_button = tk.Button(self.options_frame, text="O", command=self.select_o, font=("Emotion Engine Italic", 18), padx=10)
-        o_button.place(x=100, y=330)
+        title3 = tk.Label(self.options_frame, text="Pocetni simbol:", font=("Emotion Engine Italic", 22))
+        title3.place(x=30, y=300)
+        self.x_or_o = tk.StringVar(value="abc") # mora nesto da se stavi da nebi bili cekirani
+        x_radio = tk.Radiobutton(
+            self.options_frame,
+            text="X",
+            variable=self.x_or_o,
+            value="X",
+            font=("Emotion Engine Italic", 18)
+        )
+        o_radio = tk.Radiobutton(
+            self.options_frame,
+            text="O",
+            variable=self.x_or_o,
+            value="O",
+            font=("Emotion Engine Italic", 18)
+        )
+        x_radio.place(x=30, y=350)
+        o_radio.place(x=100, y=350)
 
         #Dugme za pocetak igre
         start_button = tk.Button(self.options_frame, text="Zapocni igru", command=self.start_game, font=("Emotion Engine Italic", 18), bg="#32cd32")
         start_button.place(x=30, y=420)
 
-        self.root.mainloop()
+        # Dugme za zavrsetak igre
+        if self.game_started:
+            self.end_button = tk.Button(self.options_frame, text="Zavrsi igru", command=self.end_game, font=("Emotion Engine Italic", 18), bg="#ff2c2c")
+            self.end_button.place(x=30, y=500)
 
+        self.root.mainloop()
 
     def generate_table(self):
         self.hexagon_diagonal_length = ((self.side_length_var.get() - 1) * 2 *
@@ -175,23 +205,25 @@ class GameUI:
                 letter, number = tag.split("_")[1:]
                 print(f"Kliknuto na stubic {letter}{number}")
 
-
-    def select_human(self):
-        self.human_or_computer = 1
-        print("Covek prvi")
-
-    def select_computer(self):
-        self.human_or_computer = 2
-        print("Computer prvi")
-
-    def select_x(self):
-        self.x_or_o = 1
-        print("Prvi igra X")
-
-    def select_o(self):
-        self.x_or_o = 2
-        print("Prvi igra O")
-
     def start_game(self):
-        game_started = True
-        print("Igra je zapoceta")
+        if self.human_or_computer.get() == "abc" or self.x_or_o.get() == "abc":
+            print("Niste odabrali ko igra prvi i sa kojim simbolom pocinje")
+            return
+
+        first_player = "Covek" if self.human_or_computer.get() == "human" else "Racunar"
+        starting_symbol = self.x_or_o.get()
+
+        print(f"{first_player} igra prvi koristeci simbol '{starting_symbol}'.")
+
+        self.game_started = True
+
+        self.end_button = tk.Button(self.options_frame, text="Zavrsi igru", command=self.end_game, font=("Emotion Engine Italic", 18), bg="#ff2c2c")
+        self.end_button.place(x=30, y=500)
+
+    def end_game(self):
+        print("Igra je zavrsena")
+        self.end_button.place_forget() # sakrije dugme za zavrsetak
+        self.human_or_computer.set("abc") # ocisti radio button
+        self.x_or_o.set("abc")
+        self.side_length_var.set(4) # resetuje dropdown
+        self.game_started = False
