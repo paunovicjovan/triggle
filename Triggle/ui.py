@@ -9,6 +9,7 @@ import math
 # 4. (moz da proveris u Font settings u windows dal ga ima za svaki slucaj, al mora da ga ima)
 
 import tkinter as tk
+from tkinter import messagebox
 
 class GameUI:
     def __init__(self):
@@ -19,8 +20,8 @@ class GameUI:
         self.table_region_width = 0 # Sirina desnog dela gde je tabla
         self.window_height = 600
         self.side_length_var = tk.IntVar(value=4) # Broj stubica po stranici table
-        self.human_or_computer = None
-        self.x_or_o = None
+        self.human_or_computer = None # "human" | "computer"
+        self.x_or_o = None # "X" | "O"
         self.game_started = False
         self.pillars = dict() # ovde ce da budu sacuvane oznake
                               # i koordinate centra stubica npr. (A,1): (x,y)
@@ -29,6 +30,8 @@ class GameUI:
         self.letters = [] # slova koja odredjuju red stubica
         self.numbers = [] # brojevi koji odredjuju "kolonu" stubica
         self.pillar_radius = 10 # poluprecnik stubica
+        self.player_radius = 14 # poluprecnik oznake igraca
+        self.clicked_pillar = None
 
         self.triangle_sides = {
             4: 100,
@@ -59,10 +62,6 @@ class GameUI:
         side_length_dropdown = tk.OptionMenu(self.options_frame, self.side_length_var, *side_length_options)
         side_length_dropdown.config(font=("Emotion Engine Italic", 18), padx=10, pady=7)
         side_length_dropdown.place(x=30, y=80)
-
-        # Dugme za generisanje table
-        generate_button = tk.Button(self.options_frame, text="Generisi", command=self.generate_table, font=("Emotion Engine Italic", 18))
-        generate_button.place(x=120, y=80)
 
         # Deo za izbor ko igra prvi covek ili racunar
         title2 = tk.Label(self.options_frame, text="Ko igra prvi:", font=("Emotion Engine Italic", 22))
@@ -161,8 +160,8 @@ class GameUI:
         radius = self.hexagon_diagonal_length / 2  # Poluprečnik
         triangle_side = self.triangle_sides[self.side_length_var.get()] # Duzina stranice trouglica
         triangle_height = triangle_side * math.sqrt(3) / 2
-        first_x = center_x + radius * math.cos(-2 * math.pi / 3)
-        first_y = center_y + radius * math.sin(-2 * math.pi / 3)
+        first_x = center_x + radius * math.cos(-2 * math.pi / 3) # x koordinata stubica A1
+        first_y = center_y + radius * math.sin(-2 * math.pi / 3) # y koordinata stubica A1
 
         pillars_in_row_count = self.side_length_var.get()
 
@@ -172,10 +171,10 @@ class GameUI:
             for j in range(pillars_in_row_count):
                 self.pillars[(letter, j+1)] = (x, y)
                 circle_id = self.canvas.create_oval(x - self.pillar_radius,
-                                        y - self.pillar_radius,
-                                        x + self.pillar_radius,
-                                        y + self.pillar_radius,
-                                        fill="white")
+                                                    y - self.pillar_radius,
+                                                    x + self.pillar_radius,
+                                                    y + self.pillar_radius,
+                                                    fill="white")
 
                 # Dodeljivanje jedinstvenog taga svakom stubicu
                 tag = f"circle_{letter}_{j+1}"
@@ -196,18 +195,22 @@ class GameUI:
                 pillars_in_row_count -= 1
 
     def on_pillar_click(self, event):
-        clicked_item = self.canvas.find_withtag("current")[0]
-        tags = self.canvas.gettags(clicked_item)
+        if self.clicked_pillar:
+            self.canvas.itemconfig(self.clicked_pillar, fill="white")
+
+        self.clicked_pillar = self.canvas.find_withtag("current")[0]
+        tags = self.canvas.gettags(self.clicked_pillar)
 
         # Pronađi red i kolonu iz taga
         for tag in tags:
             if tag.startswith("circle_"):
                 letter, number = tag.split("_")[1:]
+                self.canvas.itemconfig(self.clicked_pillar, fill="yellow")
                 print(f"Kliknuto na stubic {letter}{number}")
 
     def start_game(self):
         if self.human_or_computer.get() == "abc" or self.x_or_o.get() == "abc":
-            print("Niste odabrali ko igra prvi i sa kojim simbolom pocinje")
+            messagebox.showwarning("Upozorenje", "Niste odabrali ko igra prvi i sa kojim simbolom pocinje")
             return
 
         first_player = "Covek" if self.human_or_computer.get() == "human" else "Racunar"
@@ -216,6 +219,10 @@ class GameUI:
         print(f"{first_player} igra prvi koristeci simbol '{starting_symbol}'.")
 
         self.game_started = True
+
+        self.generate_table()
+
+        self.occupy_triangle(("A",1), ("A", 2), ("B", 2), "x")
 
         self.end_button = tk.Button(self.options_frame, text="Zavrsi igru", command=self.end_game, font=("Emotion Engine Italic", 18), bg="#ff2c2c")
         self.end_button.place(x=30, y=500)
@@ -227,3 +234,25 @@ class GameUI:
         self.x_or_o.set("abc")
         self.side_length_var.set(4) # resetuje dropdown
         self.game_started = False
+
+    # t1 je oblika (A,1)
+    def occupy_triangle(self, t1, t2, t3, player):
+        x1,y1 = self.pillars[t1]
+        x2,y2 = self.pillars[t2]
+        x3,y3 = self.pillars[t3]
+        xc = (x1 + x2 + x3) / 3
+        yc = (y1 + y2 + y3) / 3
+        color = "blue" if player == "X" or player == "x" else "red"
+
+        self.canvas.create_oval(xc - self.player_radius,
+                                yc - self.player_radius,
+                                xc + self.player_radius,
+                                yc + self.player_radius,
+                                fill=color)
+
+        self.canvas.create_text(
+            xc, yc,  # Koordinate centra kružića
+            text="X",  # Tekst koji želiš da prikažeš
+            font=("Arial", 12),  # Font i veličina
+            fill="white"  # Boja teksta
+        )
