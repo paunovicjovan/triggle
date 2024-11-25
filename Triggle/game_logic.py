@@ -1,3 +1,5 @@
+from xmlrpc.client import boolean
+
 
 # start je stubic npr. (A,1), smer je "DD" | "DL" | "D"
 def find_end_pillar(start, direction, table_size):
@@ -35,3 +37,26 @@ def find_end_pillar(start, direction, table_size):
 
         return letter, number
 
+def is_game_over(game_state):
+    # racunanje koliko tabla ima ukupno mogucih polja koja mogu da se osvoje
+    # sestougao se sastoji od 6 jednakostranicna trougla, a u svakom je (table_size - 1) ** 2 trouglica
+    total_triangles_count = 6 * (game_state.table_size - 1) ** 2
+    half_triangles_count = total_triangles_count // 2
+
+    # prvi kriterijum - neki od igraca je zauzeo vise od polovine mogucih polja
+    if (len(game_state.x_player_fields) > half_triangles_count or
+        len(game_state.o_player_fields) > half_triangles_count):
+        return True
+
+    # i koliko ima stranica trouglica bez ponavljanja
+    # izbroje se prvo vodoravne stranice pa se na kraju pomnozi sa 3 da se dobije za celu tablu
+    # suma brojeva od 3 do 6 za tablu velicine 4
+    half = sum(range(game_state.table_size - 1, 2 * game_state.table_size - 1))
+    # sabiramo za gornju i donju polovinu i oduzimamo broj stranica na dijagonali jer je dva puta uracunat
+    horizontal_triangle_sides_count = 2 * half - 2 * (game_state.table_size - 1)
+    total_triangle_sides_count = 3 * horizontal_triangle_sides_count
+
+    if len(game_state.completed_sides) == total_triangle_sides_count:
+        return True
+
+    return False

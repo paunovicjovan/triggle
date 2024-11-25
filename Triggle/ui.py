@@ -230,6 +230,8 @@ class GameUI:
         self.occupy_triangle(("B",1), ("A", 1), ("B", 2), "o")
         self.occupy_triangle(("A",1), ("A", 2), ("B", 2), "x")
         self.draw_rubber(("A", 4),("D", 4))
+        # test
+        game_logic.is_game_over(self.game_state)
 
         self.end_button = tk.Button(self.options_frame, text="Zavrsi igru", command=self.end_game, font=("Emotion Engine Italic", 18), bg="#ff2c2c")
         self.end_button.place(x=30, y=500)
@@ -244,6 +246,7 @@ class GameUI:
 
     # t je oblika (A,1)
     def occupy_triangle(self, t1, t2, t3, player):
+
         x1,y1 = self.pillars[t1]
         x2,y2 = self.pillars[t2]
         x3,y3 = self.pillars[t3]
@@ -263,6 +266,8 @@ class GameUI:
             font=("Arial", 10),
             fill="white"
         )
+
+        # promeni game_state
 
     def draw_rubber(self, start, end):
         if start not in self.pillars or end not in self.pillars:
@@ -303,6 +308,8 @@ class GameUI:
         # crtanje gumice
         self.canvas.create_line(t1x1, t1y1, t1x2, t1y2, fill="white", width=2)
         self.canvas.create_line(t2x1, t2y1, t2x2, t2y2, fill="white", width=2)
+
+        # promeni game_state
 
     def find_possible_directions(self, pillar_position):
         for direction in self.game_state.all_directions:
