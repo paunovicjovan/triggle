@@ -208,6 +208,8 @@ class GameUI:
                 letter, number = tag.split("_")[1:]
                 self.canvas.itemconfig(self.clicked_pillar, fill="yellow")
                 print(f"Kliknuto na stubic {letter}{number}")
+                self.possible_directions(letter, number)
+
 
     def start_game(self):
         # nebitno, samo za test bilo
@@ -301,3 +303,87 @@ class GameUI:
         self.canvas.create_line(t1x1, t1y1, t1x2, t1y2, fill="white", width=2)
         self.canvas.create_line(t2x1, t2y1, t2x2, t2y2, fill="white", width=2)
 
+    def possible_directions(self, letter, number):
+        print(f"X = {letter}, Y = {number}")
+        number = int(number)
+
+        # ako je tabla velicine 4
+        if self.game_state.table_size == 4:
+            # ispitivanje da li moze da ide desno
+            allowed_moves_D = {
+                'A': [1],
+                'B': range(1, 3),
+                'C': range(1, 4),
+                'D': range(1, 5),
+                'E': range(1, 4),
+                'F': range(1, 3),
+                'G': [1]
+            }
+
+            if letter in allowed_moves_D and number in allowed_moves_D[letter]:
+                print("moze desno")
+            else:
+                print("ne moze desno")
+
+            # ispitivanje da li moze da ide dole desno
+            if number <= 4 and letter in ('A', 'B', 'C', 'D'):
+                print("moze dole desno")
+            else:
+                print("ne moze dole desno")
+
+            # ispitivanje da li moze da dole levo
+            allowed_moves_DL = {
+                'A': 1,
+                'B': 2,
+                'C': 3,
+                'D': 4
+            }
+
+            if letter in allowed_moves_DL and number >= allowed_moves_DL[letter]:
+                print("moze dole levo")
+            else:
+                print("ne moze dole levo")
+
+        # ako je tabla velicine 5
+        elif self.game_state.table_size == 5:
+            # ispitivanje da li moze da ide desno
+            allowed_moves_D = {
+                'A': range(1, 3),
+                'B': range(1, 4),
+                'C': range(1, 5),
+                'D': range(1, 6),
+                'E': range(1, 7),
+                'F': range(1, 6),
+                'G': range(1, 5),
+                'H': range(1, 4),
+                'I': range(1, 3),
+            }
+
+            if letter in allowed_moves_D and number in allowed_moves_D[letter]:
+                print("moze desno")
+            else:
+                print("ne moze desno")
+
+            # ispitivanje da li moze da ide dole desno
+            if number <= 6 and letter in ('A', 'B', 'C', 'D', 'E', 'F'):
+                if number == 6 and letter == 'F':
+                    print("ne moze dole desno")
+                else:
+                    print("moze dole desno")
+            else:
+                print("ne moze dole desno")
+
+            # ispitivanje da li moze da dole levo
+            allowed_moves_DL = {
+                'A': 1,
+                'B': 1,
+                'C': 2,
+                'D': 3,
+                'E': 4,
+                'F': 4,
+            }
+
+            if letter in allowed_moves_DL and number >= allowed_moves_DL[letter]:
+                print("moze dole levo")
+            else:
+                print("ne moze dole levo")
