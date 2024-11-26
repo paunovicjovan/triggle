@@ -24,12 +24,15 @@ class GameUI:
         self.options_region_width = 300 # Sirina levog dela prozora sa opcijama za igru
         self.options_frame = None # Frame u kom se nalaze UI elementi za opcije
         self.table_region_width = 0 # Sirina desnog dela gde je tabla
-        self.window_height = 600
+        self.window_height = 700
         # ove promenljive koje se zavrsavaju sa var su za vezane ui elemente
         # game state svakako ima svoje odgovarajuce atribute
         self.table_size_var = tk.IntVar(value=self.game_state.table_size) # Broj stubica po stranici table
         self.human_or_computer_var = tk.StringVar(value="human") # po defaultu human
         self.x_or_o_var = tk.StringVar(value="X")  # po defaultu X
+        self.d_button_var = None
+        self.dd_button_var = None
+        self.dl_button_var = None
         self.pillars = dict() # ovde ce da budu sacuvane oznake
                               # i koordinate centra stubica npr. (A,1): (x,y)
                               # nije u game_state jer je vise stvar vezana za UI zbog pozicije x,y
@@ -244,6 +247,16 @@ class GameUI:
         self.table_size_var.set(4) # resetuje dropdown
         self.game_state.game_started = False
 
+        if self.d_button_var:
+            self.d_button_var.destroy()
+            self.d_button_var = None
+        if self.dd_button_var:
+            self.dd_button_var.destroy()
+            self.dd_button_var = None
+        if self.dl_button_var:
+            self.dl_button_var.destroy()
+            self.dl_button_var = None
+
     # t je oblika (A,1)
     def occupy_triangle(self, t1, t2, t3, player):
 
@@ -312,9 +325,30 @@ class GameUI:
         # promeni game_state
 
     def find_possible_directions(self, pillar_position):
+        if self.d_button_var:
+            self.d_button_var.destroy()
+            self.d_button_var = None
+        if self.dd_button_var:
+            self.dd_button_var.destroy()
+            self.dd_button_var = None
+        if self.dl_button_var:
+            self.dl_button_var.destroy()
+            self.dl_button_var = None
         for direction in self.game_state.all_directions:
             end_pillar_position = game_logic.find_end_pillar(pillar_position, direction, self.game_state.table_size)
             if end_pillar_position in self.pillars:
                 print("Moze " + direction)
+                if direction == "D":
+                    self.game_state.show_D_button = True
+                    self.d_button_var = tk.Button(self.options_frame, text="D", font=("Emotion Engine Italic", 18), padx=7)
+                    self.d_button_var.place(x=30, y=580)
+                elif direction == "DD":
+                    self.game_state.show_DD_button = True
+                    self.dd_button_var = tk.Button(self.options_frame, text="DD", font=("Emotion Engine Italic", 18))
+                    self.dd_button_var.place(x=80, y=580)
+                elif direction == "DL":
+                    self.game_state.show_DL_button = True
+                    self.dl_button_var = tk.Button(self.options_frame, text="DL", font=("Emotion Engine Italic", 18))
+                    self.dl_button_var.place(x=130, y=580)
 
         print()

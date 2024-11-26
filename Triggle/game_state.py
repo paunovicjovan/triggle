@@ -21,6 +21,10 @@ class GameState:
         self.x_or_o = "X" # "X" | "O"
         self.game_started = False
 
+        self.show_D_button = None
+        self.show_DD_button = None
+        self.show_DL_button = None
+
         self.letters = [chr(x+65) for x in range(0, 2 * self.table_size - 1)]
         self.numbers = [x + 1 for x in range(0, 2 * self.table_size - 1)]
         self.all_directions = ["D", "DD", "DL"]
