@@ -2,7 +2,12 @@
 
 class GameState:
     def __init__(self, table_size):
+
+        if table_size < 4 or table_size > 8:
+            raise "Neispravna velicina table"
         # pozicije igraca u formatu (T1, T2, T3) npr. ((A,1), (A,2), (B,2))
+        # tri temena koja odredjuju poziciju igraca su uvek uredjena kao kad
+        # se obilaze u smeru kazaljke na satu pocev od gornjeg/gornjeg levog temena
         self.x_player_fields = set()
         self.o_player_fields = set()
 

@@ -211,9 +211,8 @@ class GameUI:
             if tag.startswith("circle_"):
                 letter, number = tag.split("_")[1:]
                 self.canvas.itemconfig(self.clicked_pillar, fill="yellow")
-                print(f"Kliknuto na stubic {letter}{number}")
+                #print(f"Kliknuto na stubic {letter}{number}")
                 self.find_possible_directions((letter, int(number)))
-
 
     def start_game(self):
         # nebitno, samo za test bilo
@@ -230,11 +229,15 @@ class GameUI:
         self.generate_table()
 
         # test
-        self.occupy_triangle(("B",1), ("A", 1), ("B", 2), "o")
-        self.occupy_triangle(("A",1), ("A", 2), ("B", 2), "x")
-        self.draw_rubber(("A", 4),("D", 4))
-        # test
-        game_logic.is_game_over(self.game_state)
+        # self.occupy_triangle(("B",1), ("A", 1), ("B", 2), "o")
+        # self.occupy_triangle(("A",1), ("A", 2), ("B", 2), "x")
+        # self.draw_rubber(("A", 4),("D", 4))
+        self.game_state.x_player_fields.add((("A", 1), ("A", 2), ("B", 2)))
+        self.game_state.o_player_fields.add((("A", 1), ("B", 2), ("B", 1)))
+        self.game_state.rubber_positions.add(("A", 1, "DD"))
+        self.game_state.rubber_positions.add(("A", 1, "DL"))
+        self.game_state.rubber_positions.add(("B", 1, "D"))
+        self.display_current_game_state()
 
         self.end_button = tk.Button(self.options_frame, text="Zavrsi igru", command=self.end_game, font=("Emotion Engine Italic", 18), bg="#ff2c2c")
         self.end_button.place(x=30, y=500)
@@ -334,21 +337,48 @@ class GameUI:
         if self.dl_button_var:
             self.dl_button_var.destroy()
             self.dl_button_var = None
+
         for direction in self.game_state.all_directions:
             end_pillar_position = game_logic.find_end_pillar(pillar_position, direction, self.game_state.table_size)
             if end_pillar_position in self.pillars:
-                print("Moze " + direction)
+                #print("Moze " + direction)
                 if direction == "D":
                     self.game_state.show_D_button = True
-                    self.d_button_var = tk.Button(self.options_frame, text="D", font=("Emotion Engine Italic", 18), padx=7)
+                    self.d_button_var = tk.Button(self.options_frame,
+                                                  text="D",
+                                                  font=("Emotion Engine Italic", 18), padx=7,
+                                                  command=lambda p=pillar_position: self.play_move(p, "D"))
                     self.d_button_var.place(x=30, y=580)
                 elif direction == "DD":
                     self.game_state.show_DD_button = True
-                    self.dd_button_var = tk.Button(self.options_frame, text="DD", font=("Emotion Engine Italic", 18))
+                    self.dd_button_var = tk.Button(self.options_frame,
+                                                   text="DD",
+                                                   font=("Emotion Engine Italic", 18),
+                                                   command=lambda p=pillar_position: self.play_move(p, "DD"))
                     self.dd_button_var.place(x=80, y=580)
                 elif direction == "DL":
                     self.game_state.show_DL_button = True
-                    self.dl_button_var = tk.Button(self.options_frame, text="DL", font=("Emotion Engine Italic", 18))
+                    self.dl_button_var = tk.Button(self.options_frame,
+                                                   text="DL",
+                                                   font=("Emotion Engine Italic", 18),
+                                                   command=lambda p=pillar_position: self.play_move(p, "DL"))
                     self.dl_button_var.place(x=130, y=580)
 
         print()
+
+    def play_move(self, pillar_position, direction):
+        print("Odigrava se ", pillar_position, direction)
+
+    def display_current_game_state(self):
+        for t1,t2,t3 in self.game_state.x_player_fields:
+            self.occupy_triangle(t1,t2,t3, "x")
+
+        for t1, t2, t3 in self.game_state.o_player_fields:
+            self.occupy_triangle(t1, t2, t3, "o")
+
+        for letter, number, direction in self.game_state.rubber_positions:
+            start_pillar = (letter, number)
+            end_pillar = game_logic.find_end_pillar(start_pillar, direction, self.game_state.table_size)
+            self.draw_rubber(start_pillar, end_pillar)
+
+        #moze da se doda i labela ko je na potezu
