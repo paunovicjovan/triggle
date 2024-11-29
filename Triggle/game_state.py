@@ -11,7 +11,7 @@ class GameState:
         self.x_player_fields = set()
         self.o_player_fields = set()
 
-        # svaka razvucena gumica u formatu (slovo, broj, smer) e.g (A, 1, "DD")
+        # svaka razvucena gumica u formatu (slovo, broj, smer) npr. (A, 1, "DD")
         # smerovi mogu da budu: "D" - Desno, "DD" - Dole Desno, "DL" - Dole Levo
         self.rubber_positions = set()
 

@@ -30,9 +30,6 @@ class GameUI:
         self.table_size_var = tk.IntVar(value=self.game_state.table_size) # Broj stubica po stranici table
         self.human_or_computer_var = tk.StringVar(value="human") # po defaultu human
         self.x_or_o_var = tk.StringVar(value="X")  # po defaultu X
-        self.d_button_var = None
-        self.dd_button_var = None
-        self.dl_button_var = None
         self.pillars = dict() # ovde ce da budu sacuvane oznake
                               # i koordinate centra stubica npr. (A,1): (x,y)
                               # nije u game_state jer je vise stvar vezana za UI zbog pozicije x,y
@@ -51,7 +48,19 @@ class GameUI:
 
         self.hexagon_diagonal_length = 6 * self.triangle_sides[self.game_state.table_size] # dijagonala sestougla koji formiraju stubici, ne pozadine
         self.hexagon_padding = 30 # razmak od stubica do temena hexagona
+
+        # UI components
         self.canvas = None
+        self.start_button = None
+        self.end_button = None
+        self.human_radio = None
+        self.computer_radio = None
+        self.x_radio = None
+        self.o_radio = None
+        self.side_length_dropdown = None
+        self.d_button = None
+        self.dd_button = None
+        self.dl_button = None
 
 
     def draw_ui(self):
@@ -68,54 +77,54 @@ class GameUI:
 
         # Dropdown meni za izbor dužine stranice
         side_length_options = [4, 5, 6, 7, 8]
-        side_length_dropdown = tk.OptionMenu(self.options_frame, self.table_size_var, *side_length_options)
-        side_length_dropdown.config(font=("Emotion Engine Italic", 18), padx=10, pady=7)
-        side_length_dropdown.place(x=30, y=80)
+        self.side_length_dropdown = tk.OptionMenu(self.options_frame, self.table_size_var, *side_length_options)
+        self.side_length_dropdown.config(font=("Emotion Engine Italic", 18), padx=10, pady=7)
+        self.side_length_dropdown.place(x=30, y=80)
 
         # Deo za izbor ko igra prvi covek ili racunar
         title2 = tk.Label(self.options_frame, text="Ko igra prvi:", font=("Emotion Engine Italic", 22))
         title2.place(x=30, y=180)
 
-        human_radio = tk.Radiobutton(
+        self.human_radio = tk.Radiobutton(
             self.options_frame,
             text="Covek",
             variable=self.human_or_computer_var,
             value="human",
             font=("Emotion Engine Italic", 18)
         )
-        computer_radio = tk.Radiobutton(
+        self.computer_radio = tk.Radiobutton(
             self.options_frame,
             text="Racunar",
             variable=self.human_or_computer_var,
             value="computer",
             font=("Emotion Engine Italic", 18)
         )
-        human_radio.place(x=30, y=230)
-        computer_radio.place(x=150, y=230)
+        self.human_radio.place(x=30, y=230)
+        self.computer_radio.place(x=150, y=230)
 
         #Deo za izbor koji simbol je prvi X ili O
         title3 = tk.Label(self.options_frame, text="Pocetni simbol:", font=("Emotion Engine Italic", 22))
         title3.place(x=30, y=300)
-        x_radio = tk.Radiobutton(
+        self.x_radio = tk.Radiobutton(
             self.options_frame,
             text="X",
             variable=self.x_or_o_var,
             value="X",
             font=("Emotion Engine Italic", 18)
         )
-        o_radio = tk.Radiobutton(
+        self.o_radio = tk.Radiobutton(
             self.options_frame,
             text="O",
             variable=self.x_or_o_var,
             value="O",
             font=("Emotion Engine Italic", 18)
         )
-        x_radio.place(x=30, y=350)
-        o_radio.place(x=100, y=350)
+        self.x_radio.place(x=30, y=350)
+        self.o_radio.place(x=100, y=350)
 
         #Dugme za pocetak igre
-        start_button = tk.Button(self.options_frame, text="Zapocni igru", command=self.start_game, font=("Emotion Engine Italic", 18), bg="#32cd32")
-        start_button.place(x=30, y=420)
+        self.start_button = tk.Button(self.options_frame, text="Zapocni igru", command=self.start_game, font=("Emotion Engine Italic", 18), bg="#32cd32")
+        self.start_button.place(x=30, y=420)
 
         # Dugme za zavrsetak igre
         if self.game_state.game_started:
@@ -216,6 +225,12 @@ class GameUI:
 
     def start_game(self):
         # nebitno, samo za test bilo
+        self.start_button.place_forget()
+        self.human_radio.config(state="disabled")
+        self.computer_radio.config(state="disabled")
+        self.x_radio.config(state="disabled")
+        self.o_radio.config(state="disabled")
+        self.side_length_dropdown.config(state="disabled")
         first_player = "Covek" if self.human_or_computer_var.get() == "human" else "Racunar"
         starting_symbol = self.x_or_o_var.get()
         print(f"{first_player} igra prvi koristeci simbol '{starting_symbol}'.")
@@ -245,20 +260,25 @@ class GameUI:
     def end_game(self):
         print("Igra je zavrsena")
         self.end_button.place_forget() # sakrije dugme za zavrsetak
+        self.start_button.place(x=30, y=420)
+        self.human_radio.config(state="normal")
+        self.computer_radio.config(state="normal")
+        self.x_radio.config(state="normal")
+        self.o_radio.config(state="normal")
+        self.side_length_dropdown.config(state="normal")
         self.human_or_computer_var.set("human") # resetuje radio button
         self.x_or_o_var.set("X")
         self.table_size_var.set(4) # resetuje dropdown
         self.game_state.game_started = False
 
-        if self.d_button_var:
-            self.d_button_var.destroy()
-            self.d_button_var = None
-        if self.dd_button_var:
-            self.dd_button_var.destroy()
-            self.dd_button_var = None
-        if self.dl_button_var:
-            self.dl_button_var.destroy()
-            self.dl_button_var = None
+        self.table_region_width = 0
+
+        if self.canvas:
+            self.canvas.destroy()
+
+        self.root.geometry(f"{self.options_region_width + self.table_region_width}x{self.window_height}")
+
+        self.remove_direction_buttons()
 
     # t je oblika (A,1)
     def occupy_triangle(self, t1, t2, t3, player):
@@ -328,43 +348,44 @@ class GameUI:
         # promeni game_state
 
     def find_possible_directions(self, pillar_position):
-        if self.d_button_var:
-            self.d_button_var.destroy()
-            self.d_button_var = None
-        if self.dd_button_var:
-            self.dd_button_var.destroy()
-            self.dd_button_var = None
-        if self.dl_button_var:
-            self.dl_button_var.destroy()
-            self.dl_button_var = None
-
+        self.remove_direction_buttons()
+        letter, number = pillar_position
         for direction in self.game_state.all_directions:
             end_pillar_position = game_logic.find_end_pillar(pillar_position, direction, self.game_state.table_size)
-            if end_pillar_position in self.pillars:
-                #print("Moze " + direction)
+            if end_pillar_position in self.pillars and (letter, number, direction) not in self.game_state.rubber_positions:
                 if direction == "D":
                     self.game_state.show_D_button = True
-                    self.d_button_var = tk.Button(self.options_frame,
-                                                  text="D",
-                                                  font=("Emotion Engine Italic", 18), padx=7,
-                                                  command=lambda p=pillar_position: self.play_move(p, "D"))
-                    self.d_button_var.place(x=30, y=580)
+                    self.d_button = tk.Button(self.options_frame,
+                                              text="D",
+                                              font=("Emotion Engine Italic", 18), padx=7,
+                                              command=lambda p=pillar_position: self.play_move(p, "D"))
+                    self.d_button.place(x=30, y=580)
                 elif direction == "DD":
                     self.game_state.show_DD_button = True
-                    self.dd_button_var = tk.Button(self.options_frame,
-                                                   text="DD",
-                                                   font=("Emotion Engine Italic", 18),
-                                                   command=lambda p=pillar_position: self.play_move(p, "DD"))
-                    self.dd_button_var.place(x=80, y=580)
+                    self.dd_button = tk.Button(self.options_frame,
+                                               text="DD",
+                                               font=("Emotion Engine Italic", 18),
+                                               command=lambda p=pillar_position: self.play_move(p, "DD"))
+                    self.dd_button.place(x=80, y=580)
                 elif direction == "DL":
                     self.game_state.show_DL_button = True
-                    self.dl_button_var = tk.Button(self.options_frame,
-                                                   text="DL",
-                                                   font=("Emotion Engine Italic", 18),
-                                                   command=lambda p=pillar_position: self.play_move(p, "DL"))
-                    self.dl_button_var.place(x=130, y=580)
+                    self.dl_button = tk.Button(self.options_frame,
+                                               text="DL",
+                                               font=("Emotion Engine Italic", 18),
+                                               command=lambda p=pillar_position: self.play_move(p, "DL"))
+                    self.dl_button.place(x=130, y=580)
 
-        print()
+
+    def remove_direction_buttons(self):
+        if self.d_button:
+            self.d_button.destroy()
+            self.d_button = None
+        if self.dd_button:
+            self.dd_button.destroy()
+            self.dd_button = None
+        if self.dl_button:
+            self.dl_button.destroy()
+            self.dl_button = None
 
     def play_move(self, pillar_position, direction):
         print("Odigrava se ", pillar_position, direction)
