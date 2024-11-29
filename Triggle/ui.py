@@ -247,11 +247,13 @@ class GameUI:
         # self.occupy_triangle(("B",1), ("A", 1), ("B", 2), "o")
         # self.occupy_triangle(("A",1), ("A", 2), ("B", 2), "x")
         # self.draw_rubber(("A", 4),("D", 4))
-        self.game_state.x_player_fields.add((("A", 1), ("A", 2), ("B", 2)))
+        # self.game_state.x_player_fields.add((("A", 1), ("A", 2), ("B", 2)))
         self.game_state.o_player_fields.add((("A", 1), ("B", 2), ("B", 1)))
+        self.game_state.x_player_fields.add((("B", 2), ("B", 3), ("C", 3)))
         self.game_state.rubber_positions.add(("A", 1, "DD"))
         self.game_state.rubber_positions.add(("A", 1, "DL"))
         self.game_state.rubber_positions.add(("B", 1, "D"))
+        self.game_state.rubber_positions.add(("A", 3, "DL"))
         self.display_current_game_state()
 
         self.end_button = tk.Button(self.options_frame, text="Zavrsi igru", command=self.end_game, font=("Emotion Engine Italic", 18), bg="#ff2c2c")
@@ -354,21 +356,18 @@ class GameUI:
             end_pillar_position = game_logic.find_end_pillar(pillar_position, direction, self.game_state.table_size)
             if end_pillar_position in self.pillars and (letter, number, direction) not in self.game_state.rubber_positions:
                 if direction == "D":
-                    self.game_state.show_D_button = True
                     self.d_button = tk.Button(self.options_frame,
                                               text="D",
                                               font=("Emotion Engine Italic", 18), padx=7,
                                               command=lambda p=pillar_position: self.play_move(p, "D"))
                     self.d_button.place(x=30, y=580)
                 elif direction == "DD":
-                    self.game_state.show_DD_button = True
                     self.dd_button = tk.Button(self.options_frame,
                                                text="DD",
                                                font=("Emotion Engine Italic", 18),
                                                command=lambda p=pillar_position: self.play_move(p, "DD"))
                     self.dd_button.place(x=80, y=580)
                 elif direction == "DL":
-                    self.game_state.show_DL_button = True
                     self.dl_button = tk.Button(self.options_frame,
                                                text="DL",
                                                font=("Emotion Engine Italic", 18),
