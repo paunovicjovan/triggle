@@ -1,10 +1,9 @@
 from xmlrpc.client import boolean
 
 
-# start je stubic npr. (A,1), smer je "DD" | "DL" | "D"
-def find_end_pillar(start, direction, table_size):
+# start je stubic npr. ("A",1), smer je "DD" | "GL" | "DL" | "GD" | "D" | "L"
+def find_end_pillar(start, direction, table_size, rubber_length=3):
     # ova metoda samo nalazi zavrsni stubic ali ne garantuje da je unutar table
-    rubber_length = 3
     letter = start[0]
     number = start[1]
     middle_letter = chr(ord("A") + table_size - 1) # ord uzima ASCII kod, chr vraca iz ASCII koda u karakter
@@ -12,6 +11,10 @@ def find_end_pillar(start, direction, table_size):
     if direction == "D":
         # ako se ide udesno, slovo je uvek isto a broj se poveca za duzinu gumice
         return letter, number + rubber_length
+
+    if direction == "L":
+        # suprotno od D
+        return letter, number - rubber_length
 
     if direction == "DD":
         for _ in range(rubber_length):
@@ -25,6 +28,17 @@ def find_end_pillar(start, direction, table_size):
 
         return letter, number
 
+    if direction == "GL":
+        # suprotno od DD
+        for _ in range(rubber_length):
+            if letter <= middle_letter:
+                letter = chr(ord(letter) - 1)
+                number -= 1
+            else:
+                letter = chr(ord(letter) - 1)
+
+        return letter, number
+
     if direction == "DL":
         for _ in range(rubber_length):
             # ako smo iznad polovine table i idemo dole levo, povecava se samo slovo
@@ -34,6 +48,17 @@ def find_end_pillar(start, direction, table_size):
             else:
                 letter = chr(ord(letter) + 1)
                 number -= 1
+
+        return letter, number
+
+    if direction == "GD":
+        # suprotno od DL
+        for _ in range(rubber_length):
+            if letter <= middle_letter:
+                letter = chr(ord(letter) - 1)
+            else:
+                letter = chr(ord(letter) - 1)
+                number += 1
 
         return letter, number
 
@@ -60,3 +85,94 @@ def is_game_over(game_state):
         return True
 
     return False
+
+def find_triangles_to_occupy(start_pillar, direction, game_state):
+
+    current_pillar = start_pillar
+    next_pillar = find_end_pillar(current_pillar, direction, game_state.table_size, rubber_length=1)
+    # smerovi "normalni" na smer poteza
+    normal_directions = {
+        "D": ["GD", "DD"],
+        "DD": ["D", "DL"],
+        "DL": ["DD", "L"]
+    }
+    result = []
+    for _ in range(3):
+        for normal_direction in normal_directions[direction]:
+            third_pillar = find_end_pillar(current_pillar, normal_direction, game_state.table_size, rubber_length=1)
+
+            # ako je treci stubic van table, predji na sledecu iteraciju
+            if third_pillar not in game_state.pillars:
+                continue
+
+            # imamo current, next i third pillar pa proveravamo da li je tu formiran trougao
+            # ako postoje gumice od current do third i od third do next onda je formiran trougao
+            if (sort_two_pillars(current_pillar, third_pillar) in game_state.completed_sides and
+               sort_two_pillars(third_pillar, next_pillar) in game_state.completed_sides):
+                triangle = sort_three_pillars_clockwise(current_pillar, third_pillar, next_pillar)
+                # ako je trouglic vec zauzet, ne dodajemo ga u rezultat
+                if triangle not in game_state.x_player_fields and triangle not in game_state.o_player_fields:
+                    result.append(triangle)
+
+        current_pillar = next_pillar
+        next_pillar = find_end_pillar(current_pillar, direction, game_state.table_size, rubber_length=1)
+
+    return result
+
+# ova funkcija vraca tuple od prosledjena dva susedna stubica, ali s tim da je drugi u tupple-u
+# ili desno ili dole desno ili dole levo u odnosu na prvi, jer su u tom formatu zapamceni u set-u
+def sort_two_pillars(p1, p2):
+    letter1, number1 = p1
+    letter2, number2 = p2
+
+    if letter1 < letter2:
+        return p1,p2
+    elif letter1 > letter2:
+        return p2,p1
+    else:
+        if number1 < number2:
+            return p1,p2
+        else:
+            return p2,p1
+
+def sort_three_pillars_clockwise(p1,p2,p3):
+    letter1, number1 = p1
+    letter2, number2 = p2
+    letter3, number3 = p3
+
+    single_pillar = None
+    double_pillars = []
+
+    # prvo nadjemo koje slovo se javlja u dva temena, a koje u samo jednom
+    if letter1 == letter2:
+        # ako su l1 i l2 isti, onda je l3 sam
+        double_letter = letter1
+        single_letter = letter3
+        single_pillar = p3
+        double_pillars.append(p1)
+        double_pillars.append(p2)
+    elif letter1 == letter3:
+        # ako nije ispunjen prvi uslov, a l1 i l3 su isti, onda je l2 sam
+        double_letter = letter1
+        single_letter = letter2
+        single_pillar = p2
+        double_pillars.append(p1)
+        double_pillars.append(p3)
+    else:
+        # ako nijedan od prva dva uslova nije ispunjen, onda je l1 sam
+        double_letter = letter2
+        single_letter = letter1
+        single_pillar = p1
+        double_pillars.append(p2)
+        double_pillars.append(p3)
+
+    if single_letter < double_letter:
+        # radi se o trouglu okrenutom nagore
+        # vracamo gornje teme iza koga slede donja dva sdesna nalevo
+        left, right = sort_two_pillars(double_pillars[0], double_pillars[1])
+        return single_pillar, right, left
+    else:
+        # radi se o trouglu okrenutom nadole
+        # vracamo gornja dva temena uredjena sleva nadesno, iza kojih sledi donje teme
+        left, right = sort_two_pillars(double_pillars[0], double_pillars[1])
+        return left, right, single_pillar

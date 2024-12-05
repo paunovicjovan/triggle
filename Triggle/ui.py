@@ -30,9 +30,7 @@ class GameUI:
         self.table_size_var = tk.IntVar(value=self.game_state.table_size) # Broj stubica po stranici table
         self.human_or_computer_var = tk.StringVar(value="human") # po defaultu human
         self.x_or_o_var = tk.StringVar(value="X")  # po defaultu X
-        self.pillars = dict() # ovde ce da budu sacuvane oznake
-                              # i koordinate centra stubica npr. (A,1): (x,y)
-                              # nije u game_state jer je vise stvar vezana za UI zbog pozicije x,y
+
 
         self.pillar_radius = 10 # poluprecnik stubica
         self.player_radius = 12 # poluprecnik oznake igraca
@@ -183,7 +181,7 @@ class GameUI:
             x=first_x
             y=first_y
             for j in range(pillars_in_row_count):
-                self.pillars[(letter, j+1)] = (x, y)
+                self.game_state.pillars[(letter, j+1)] = (x, y)
                 circle_id = self.canvas.create_oval(x - self.pillar_radius,
                                                     y - self.pillar_radius,
                                                     x + self.pillar_radius,
@@ -220,20 +218,19 @@ class GameUI:
             if tag.startswith("circle_"):
                 letter, number = tag.split("_")[1:]
                 self.canvas.itemconfig(self.clicked_pillar, fill="yellow")
-                #print(f"Kliknuto na stubic {letter}{number}")
                 self.find_possible_directions((letter, int(number)))
 
     def start_game(self):
-        # nebitno, samo za test bilo
         self.start_button.place_forget()
         self.human_radio.config(state="disabled")
         self.computer_radio.config(state="disabled")
         self.x_radio.config(state="disabled")
         self.o_radio.config(state="disabled")
         self.side_length_dropdown.config(state="disabled")
-        first_player = "Covek" if self.human_or_computer_var.get() == "human" else "Racunar"
-        starting_symbol = self.x_or_o_var.get()
-        print(f"{first_player} igra prvi koristeci simbol '{starting_symbol}'.")
+
+        # first_player = "Covek" if self.human_or_computer_var.get() == "human" else "Racunar"
+        # starting_symbol = self.x_or_o_var.get()
+        # print(f"{first_player} igra prvi koristeci simbol '{starting_symbol}'.")
         ###
 
         self.game_state = GameState(self.table_size_var.get())
@@ -242,19 +239,6 @@ class GameUI:
         self.game_state.game_started = True
 
         self.generate_table()
-
-        # test
-        # self.occupy_triangle(("B",1), ("A", 1), ("B", 2), "o")
-        # self.occupy_triangle(("A",1), ("A", 2), ("B", 2), "x")
-        # self.draw_rubber(("A", 4),("D", 4))
-        # self.game_state.x_player_fields.add((("A", 1), ("A", 2), ("B", 2)))
-        self.game_state.o_player_fields.add((("A", 1), ("B", 2), ("B", 1)))
-        self.game_state.x_player_fields.add((("B", 2), ("B", 3), ("C", 3)))
-        self.game_state.rubber_positions.add(("A", 1, "DD"))
-        self.game_state.rubber_positions.add(("A", 1, "DL"))
-        self.game_state.rubber_positions.add(("B", 1, "D"))
-        self.game_state.rubber_positions.add(("A", 3, "DL"))
-        self.display_current_game_state()
 
         self.end_button = tk.Button(self.options_frame, text="Zavrsi igru", command=self.end_game, font=("Emotion Engine Italic", 18), bg="#ff2c2c")
         self.end_button.place(x=30, y=500)
@@ -272,6 +256,7 @@ class GameUI:
         self.x_or_o_var.set("X")
         self.table_size_var.set(4) # resetuje dropdown
         self.game_state.game_started = False
+        self.clicked_pillar = None
 
         self.table_region_width = 0
 
@@ -282,12 +267,12 @@ class GameUI:
 
         self.remove_direction_buttons()
 
-    # t je oblika (A,1)
+    # t je oblika ("A",1)
     def occupy_triangle(self, t1, t2, t3, player):
 
-        x1,y1 = self.pillars[t1]
-        x2,y2 = self.pillars[t2]
-        x3,y3 = self.pillars[t3]
+        x1,y1 = self.game_state.pillars[t1]
+        x2,y2 = self.game_state.pillars[t2]
+        x3,y3 = self.game_state.pillars[t3]
         xc = (x1 + x2 + x3) / 3
         yc = (y1 + y2 + y3) / 3
         color = "blue" if player == "X" or player == "x" else "red"
@@ -305,15 +290,13 @@ class GameUI:
             fill="white"
         )
 
-        # promeni game_state
-
     def draw_rubber(self, start, end):
-        if start not in self.pillars or end not in self.pillars:
+        if start not in self.game_state.pillars or end not in self.game_state.pillars:
             print("Nemoguce crtanje gumice, zadati nevalidni stubici")
             return
 
-        x1, y1 = self.pillars[start]
-        x2, y2 = self.pillars[end]
+        x1, y1 = self.game_state.pillars[start]
+        x2, y2 = self.game_state.pillars[end]
         r = self.pillar_radius
 
         dx = x2 - x1
@@ -347,14 +330,12 @@ class GameUI:
         self.canvas.create_line(t1x1, t1y1, t1x2, t1y2, fill="white", width=2)
         self.canvas.create_line(t2x1, t2y1, t2x2, t2y2, fill="white", width=2)
 
-        # promeni game_state
-
     def find_possible_directions(self, pillar_position):
         self.remove_direction_buttons()
         letter, number = pillar_position
         for direction in self.game_state.all_directions:
             end_pillar_position = game_logic.find_end_pillar(pillar_position, direction, self.game_state.table_size)
-            if end_pillar_position in self.pillars and (letter, number, direction) not in self.game_state.rubber_positions:
+            if end_pillar_position in self.game_state.pillars and (letter, number, direction) not in self.game_state.rubber_positions:
                 if direction == "D":
                     self.d_button = tk.Button(self.options_frame,
                                               text="D",
@@ -374,7 +355,6 @@ class GameUI:
                                                command=lambda p=pillar_position: self.play_move(p, "DL"))
                     self.dl_button.place(x=130, y=580)
 
-
     def remove_direction_buttons(self):
         if self.d_button:
             self.d_button.destroy()
@@ -387,7 +367,52 @@ class GameUI:
             self.dl_button = None
 
     def play_move(self, pillar_position, direction):
-        print("Odigrava se ", pillar_position, direction)
+        # ako je pozvana ova funkcija, potez je sigurno validan
+        letter, number = pillar_position
+
+        self.canvas.itemconfig(self.clicked_pillar, fill="white")
+        self.clicked_pillar = None
+        self.remove_direction_buttons()
+
+        # dodavanje gumice
+        self.game_state.rubber_positions.add((letter, number, direction))
+        end_pillar = game_logic.find_end_pillar(pillar_position, direction, self.game_state.table_size)
+        self.draw_rubber(pillar_position, end_pillar)
+
+        # dodavanje stranica trouglica koje su formirane
+        middle_pillar_1 = game_logic.find_end_pillar(pillar_position, direction, self.game_state.table_size, rubber_length=1)
+        middle_pillar_2 = game_logic.find_end_pillar(middle_pillar_1, direction, self.game_state.table_size, rubber_length=1)
+        self.game_state.completed_sides.add((pillar_position, middle_pillar_1))
+        self.game_state.completed_sides.add((middle_pillar_1, middle_pillar_2))
+        self.game_state.completed_sides.add((middle_pillar_2, end_pillar))
+
+        # provera koji trouglici su formirani
+        triangles_to_occupy = game_logic.find_triangles_to_occupy(pillar_position, direction, self.game_state)
+        for triangle in triangles_to_occupy:
+            t1, t2, t3 = triangle
+            if self.game_state.x_or_o == "X":
+                self.game_state.x_player_fields.add(triangle)
+                self.occupy_triangle(t1,t2,t3, "X")
+            else:
+                self.game_state.o_player_fields.add(triangle)
+                self.occupy_triangle(t1, t2, t3, "O")
+
+        self.game_state.x_or_o = "X" if self.game_state.x_or_o == "O" else "O"
+        print("Igra " + self.game_state.x_or_o)
+
+        # ispisi neku labelu ko je na potezu
+
+
+        if game_logic.is_game_over(self.game_state):
+            print("Kraj igre")
+
+            if len(self.game_state.x_player_fields) > len(self.game_state.o_player_fields):
+                print("Pobednik X")
+            elif len(self.game_state.x_player_fields) < len(self.game_state.o_player_fields):
+                print("Pobednik O")
+            else:
+                print("Nereseno")
+
 
     def display_current_game_state(self):
         for t1,t2,t3 in self.game_state.x_player_fields:

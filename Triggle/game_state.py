@@ -29,3 +29,6 @@ class GameState:
         self.letters = [chr(x+65) for x in range(0, 2 * self.table_size - 1)]
         self.numbers = [x + 1 for x in range(0, 2 * self.table_size - 1)]
         self.all_directions = ["D", "DD", "DL"]
+
+        self.pillars = dict()  # ovde ce da budu sacuvane oznake
+                               # i koordinate centra stubica npr. ("A",1): (x,y)
