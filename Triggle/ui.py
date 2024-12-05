@@ -258,12 +258,8 @@ class GameUI:
         self.game_state.game_started = False
         self.clicked_pillar = None
 
-        self.table_region_width = 0
-
-        if self.canvas:
-            self.canvas.destroy()
-
-        self.root.geometry(f"{self.options_region_width + self.table_region_width}x{self.window_height}")
+        # disable canvas
+        self.canvas.unbind("<Button-1>") # nece ovo
 
         self.remove_direction_buttons()
 
@@ -404,6 +400,7 @@ class GameUI:
 
 
         if game_logic.is_game_over(self.game_state):
+            self.end_game()
             print("Kraj igre")
 
             if len(self.game_state.x_player_fields) > len(self.game_state.o_player_fields):
