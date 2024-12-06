@@ -1,5 +1,25 @@
-from xmlrpc.client import boolean
 
+
+def is_move_valid(start_pillar, direction, game_state):
+    letter, number = start_pillar
+    end_pillar_position = find_end_pillar(start_pillar, direction, game_state.table_size)
+
+    # ako je krajnji stubic izvan table ili je od te pozicije u tom smeru vec razvucena gumica, potez je nevalidan
+    if end_pillar_position not in game_state.pillars or (letter, number, direction) in game_state.rubber_positions:
+        return False
+
+    completed_sides = find_completed_sides(start_pillar, direction, game_state)
+    # ako gumica ne formira nijednu novu stranicu, potez je nevalidan
+    if set(completed_sides).issubset(game_state.completed_sides):
+        return False
+
+    return True
+
+def find_completed_sides(start_pillar, direction, game_state):
+    middle_pillar_1 = find_end_pillar(start_pillar, direction, game_state.table_size, rubber_length=1)
+    middle_pillar_2 = find_end_pillar(middle_pillar_1, direction, game_state.table_size, rubber_length=1)
+    end_pillar = find_end_pillar(middle_pillar_2, direction, game_state.table_size, rubber_length=1)
+    return [(start_pillar, middle_pillar_1), (middle_pillar_1, middle_pillar_2), (middle_pillar_2, end_pillar)]
 
 # start je stubic npr. ("A",1), smer je "DD" | "GL" | "DL" | "GD" | "D" | "L"
 def find_end_pillar(start, direction, table_size, rubber_length=3):
@@ -176,3 +196,37 @@ def sort_three_pillars_clockwise(p1,p2,p3):
         # vracamo gornja dva temena uredjena sleva nadesno, iza kojih sledi donje teme
         left, right = sort_two_pillars(double_pillars[0], double_pillars[1])
         return left, right, single_pillar
+
+def change_game_state(start_pillar, direction, game_state):
+    letter, number = start_pillar
+
+    # dodajemo gumicu celom duzinom
+    game_state.rubber_positions.add((letter, number, direction))
+
+    # dodajemo stranice trouglica koje je postavljena gumica formirala
+    for completed_side in find_completed_sides(start_pillar, direction, game_state):
+        game_state.completed_sides.add(completed_side)
+
+    # dodajemo trouglice koji su formirani
+    triangles_to_occupy = find_triangles_to_occupy(start_pillar, direction, game_state)
+    for triangle in triangles_to_occupy:
+        if game_state.x_or_o == "X":
+            game_state.x_player_fields.add(triangle)
+        else:
+            game_state.o_player_fields.add(triangle)
+
+    # menjamo ko je na potezu
+    game_state.x_or_o = "X" if game_state.x_or_o == "O" else "O"
+
+    # vratimo trouglice koje ui treba da oboji
+    return triangles_to_occupy
+
+def find_all_possible_moves(game_state):
+    all_possible_moves = []
+    for pillar in game_state.pillars:
+        letter, number = pillar
+        for direction in game_state.all_directions:
+            if is_move_valid(pillar, direction, game_state):
+                all_possible_moves.append((letter, number, direction))
+
+    return all_possible_moves

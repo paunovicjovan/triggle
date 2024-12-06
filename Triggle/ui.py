@@ -228,11 +228,6 @@ class GameUI:
         self.o_radio.config(state="disabled")
         self.side_length_dropdown.config(state="disabled")
 
-        # first_player = "Covek" if self.human_or_computer_var.get() == "human" else "Racunar"
-        # starting_symbol = self.x_or_o_var.get()
-        # print(f"{first_player} igra prvi koristeci simbol '{starting_symbol}'.")
-        ###
-
         self.game_state = GameState(self.table_size_var.get())
         self.game_state.human_or_computer = self.human_or_computer_var.get()
         self.game_state.x_or_o = self.x_or_o_var.get()
@@ -328,16 +323,15 @@ class GameUI:
 
     def find_possible_directions(self, pillar_position):
         self.remove_direction_buttons()
-        letter, number = pillar_position
+
         for direction in self.game_state.all_directions:
-            end_pillar_position = game_logic.find_end_pillar(pillar_position, direction, self.game_state.table_size)
-            if end_pillar_position in self.game_state.pillars and (letter, number, direction) not in self.game_state.rubber_positions:
+            if game_logic.is_move_valid(pillar_position, direction, self.game_state):
                 if direction == "D":
                     self.d_button = tk.Button(self.options_frame,
                                               text="D",
                                               font=("Emotion Engine Italic", 18), padx=7,
                                               command=lambda p=pillar_position: self.play_move(p, "D"))
-                    self.d_button.place(x=30, y=580)
+                    self.d_button.place(x=130, y=580)
                 elif direction == "DD":
                     self.dd_button = tk.Button(self.options_frame,
                                                text="DD",
@@ -349,7 +343,7 @@ class GameUI:
                                                text="DL",
                                                font=("Emotion Engine Italic", 18),
                                                command=lambda p=pillar_position: self.play_move(p, "DL"))
-                    self.dl_button.place(x=130, y=580)
+                    self.dl_button.place(x=30, y=580)
 
     def remove_direction_buttons(self):
         if self.d_button:
@@ -364,43 +358,37 @@ class GameUI:
 
     def play_move(self, pillar_position, direction):
         # ako je pozvana ova funkcija, potez je sigurno validan
-        letter, number = pillar_position
 
+        # sklonimo highlight sa kliknutog stubica i dugmice za smerove poteza
         self.canvas.itemconfig(self.clicked_pillar, fill="white")
         self.clicked_pillar = None
         self.remove_direction_buttons()
 
-        # dodavanje gumice
-        self.game_state.rubber_positions.add((letter, number, direction))
+        # crtanje razvucene gumice
         end_pillar = game_logic.find_end_pillar(pillar_position, direction, self.game_state.table_size)
         self.draw_rubber(pillar_position, end_pillar)
 
-        # dodavanje stranica trouglica koje su formirane
-        middle_pillar_1 = game_logic.find_end_pillar(pillar_position, direction, self.game_state.table_size, rubber_length=1)
-        middle_pillar_2 = game_logic.find_end_pillar(middle_pillar_1, direction, self.game_state.table_size, rubber_length=1)
-        self.game_state.completed_sides.add((pillar_position, middle_pillar_1))
-        self.game_state.completed_sides.add((middle_pillar_1, middle_pillar_2))
-        self.game_state.completed_sides.add((middle_pillar_2, end_pillar))
-
-        # provera koji trouglici su formirani
-        triangles_to_occupy = game_logic.find_triangles_to_occupy(pillar_position, direction, self.game_state)
+        # promena stanja igre i bojenje formiranih trouglica
+        triangles_to_occupy = game_logic.change_game_state(pillar_position, direction, self.game_state)
         for triangle in triangles_to_occupy:
             t1, t2, t3 = triangle
-            if self.game_state.x_or_o == "X":
-                self.game_state.x_player_fields.add(triangle)
+            # uslovi su obrnuti jer se stanje vec promenilo pa je protivnik na potezu
+            if self.game_state.x_or_o == "O":
+                # ako je sada O na potezu, znaci da je trouglice prethodno zauzeo X
                 self.occupy_triangle(t1,t2,t3, "X")
             else:
-                self.game_state.o_player_fields.add(triangle)
+                # ako je X na potezu onda je trouglice prethodno zauzeo O
                 self.occupy_triangle(t1, t2, t3, "O")
 
-        self.game_state.x_or_o = "X" if self.game_state.x_or_o == "O" else "O"
         print("Igra " + self.game_state.x_or_o)
+        # print("Moguci potezi su: ", game_logic.find_all_possible_moves(self.game_state))
 
         # ispisi neku labelu ko je na potezu
 
 
         if game_logic.is_game_over(self.game_state):
             self.end_game()
+            # prikazi neki messagebox npr za ove info
             print("Kraj igre")
 
             if len(self.game_state.x_player_fields) > len(self.game_state.o_player_fields):
@@ -422,5 +410,3 @@ class GameUI:
             start_pillar = (letter, number)
             end_pillar = game_logic.find_end_pillar(start_pillar, direction, self.game_state.table_size)
             self.draw_rubber(start_pillar, end_pillar)
-
-        #moze da se doda i labela ko je na potezu
