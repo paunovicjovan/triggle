@@ -1,4 +1,4 @@
-
+import copy
 
 class GameState:
     def __init__(self, table_size):
@@ -32,3 +32,22 @@ class GameState:
 
         self.pillars = dict()  # ovde ce da budu sacuvane oznake
                                # i koordinate centra stubica npr. ("A",1): (x,y)
+
+    def clone(self):
+        new_instance = GameState(self.table_size)
+        # duboko kopiranje za atribute koji se menjaju
+        new_instance.x_player_fields = set(self.x_player_fields)
+        new_instance.o_player_fields = set(self.o_player_fields)
+        new_instance.rubber_positions = set(self.rubber_positions)
+        new_instance.completed_sides = set(self.completed_sides)
+        new_instance.human_or_computer = self.human_or_computer
+        new_instance.x_or_o = self.x_or_o
+        new_instance.game_started = self.game_started
+
+        # plitko kopiranje za atribute koji su u svakom game state-u isti
+        new_instance.letters = self.letters
+        new_instance.numbers = self.numbers
+        new_instance.all_directions = self.all_directions
+        new_instance.pillars = self.pillars
+
+        return new_instance

@@ -381,10 +381,8 @@ class GameUI:
                 self.occupy_triangle(t1, t2, t3, "O")
 
         print("Igra " + self.game_state.x_or_o)
-        # print("Moguci potezi su: ", game_logic.find_all_possible_moves(self.game_state))
 
         # ispisi neku labelu ko je na potezu
-
 
         if game_logic.is_game_over(self.game_state):
             self.end_game()
