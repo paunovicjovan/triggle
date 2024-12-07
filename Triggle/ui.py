@@ -1,6 +1,7 @@
 import game_logic
 from game_state import GameState
 import math
+from tkinter import messagebox
 
 # iskopiraj tcl folder iz foldera gde je python instaliran, u venv
 
@@ -21,7 +22,7 @@ class GameUI:
 
         # UI atributi
         self.root.resizable(False, False)
-        self.options_region_width = 300 # Sirina levog dela prozora sa opcijama za igru
+        self.options_region_width = 500 # Sirina levog dela prozora sa opcijama za igru
         self.options_frame = None # Frame u kom se nalaze UI elementi za opcije
         self.table_region_width = 0 # Sirina desnog dela gde je tabla
         self.window_height = 700
@@ -30,7 +31,6 @@ class GameUI:
         self.table_size_var = tk.IntVar(value=self.game_state.table_size) # Broj stubica po stranici table
         self.human_or_computer_var = tk.StringVar(value="human") # po defaultu human
         self.x_or_o_var = tk.StringVar(value="X")  # po defaultu X
-
 
         self.pillar_radius = 10 # poluprecnik stubica
         self.player_radius = 12 # poluprecnik oznake igraca
@@ -59,7 +59,9 @@ class GameUI:
         self.d_button = None
         self.dd_button = None
         self.dl_button = None
-
+        self.status_label = None
+        self.x_fields_label = None
+        self.o_fields_label = None
 
     def draw_ui(self):
         self.root.geometry(f'{self.options_region_width}x{self.window_height}')
@@ -238,8 +240,16 @@ class GameUI:
         self.end_button = tk.Button(self.options_frame, text="Zavrsi igru", command=self.end_game, font=("Emotion Engine Italic", 18), bg="#ff2c2c")
         self.end_button.place(x=30, y=500)
 
+        self.status_label = tk.Label(self.options_frame, text=f"Na potezu: {self.game_state.x_or_o}", font=("Emotion Engine Italic", 18))
+        self.status_label.place(x=320, y=30)
+
+        self.x_fields_label = tk.Label(self.options_frame, text=f"X zauzeo: {len(self.game_state.x_player_fields)}", font=("Emotion Engine Italic", 18))
+        self.x_fields_label.place(x=320, y=80)
+
+        self.o_fields_label = tk.Label(self.options_frame, text=f"O zauzeo: {len(self.game_state.o_player_fields)}", font=("Emotion Engine Italic", 18))
+        self.o_fields_label.place(x=320, y=130)
+
     def end_game(self):
-        print("Igra je zavrsena")
         self.end_button.place_forget() # sakrije dugme za zavrsetak
         self.start_button.place(x=30, y=420)
         self.human_radio.config(state="normal")
@@ -254,7 +264,44 @@ class GameUI:
         self.clicked_pillar = None
 
         # disable canvas
-        self.canvas.unbind("<Button-1>") # nece ovo
+        for tag in self.canvas.find_all():
+            self.canvas.itemconfig(tag, state="disabled") # disejbluje sve elemente na canvasu
+            self.canvas.tag_unbind(tag, "<Button-1>") # i uklanja im dogadjaje
+
+        # birsanje labele ko je na potezu
+        if self.status_label:
+            self.status_label.destroy()
+            self.status_label = None
+
+        if self.x_fields_label:
+            self.x_fields_label.destroy()
+            self.x_fields_label = None
+
+        if self.o_fields_label:
+            self.o_fields_label.destroy()
+            self.o_fields_label = None
+
+        if len(self.game_state.x_player_fields) > len(self.game_state.o_player_fields):
+            messagebox.showinfo(
+                title="Igra je zavrsena",
+                message="Pobednik je X!\n\n"
+                        f"X je zauzeo: {len(self.game_state.x_player_fields)} polja\n"
+                        f"O je zauzeo: {len(self.game_state.o_player_fields)} polja\n"
+            )
+        elif len(self.game_state.x_player_fields) < len(self.game_state.o_player_fields):
+            messagebox.showinfo(
+                title="Igra je zavrsena",
+                message="Pobednik je O!\n\n"
+                        f"X je zauzeo: {len(self.game_state.x_player_fields)} polja\n"
+                        f"O je zauzeo: {len(self.game_state.o_player_fields)} polja\n"
+            )
+        else:
+            messagebox.showinfo(
+                title="Igra je zavrsena",
+                message="Nereseno je!\n\n"
+                        f"X je zauzeo: {len(self.game_state.x_player_fields)} polja\n"
+                        f"O je zauzeo: {len(self.game_state.o_player_fields)} polja\n"
+            )
 
         self.remove_direction_buttons()
 
@@ -380,21 +427,41 @@ class GameUI:
                 # ako je X na potezu onda je trouglice prethodno zauzeo O
                 self.occupy_triangle(t1, t2, t3, "O")
 
-        print("Igra " + self.game_state.x_or_o)
+        # labela za prikaz ko je na potezu i ko je zauzeo koliko polja
+        if self.status_label:
+            self.status_label.config(text=f"Na potezu: {self.game_state.x_or_o}")
 
-        # ispisi neku labelu ko je na potezu
+        if self.x_fields_label:
+            self.x_fields_label.config(text=f"X zauzeo: {len(self.game_state.x_player_fields)}")
+
+        if self.o_fields_label:
+            self.o_fields_label.config(text=f"O zauzeo: {len(self.game_state.o_player_fields)}")
 
         if game_logic.is_game_over(self.game_state):
-            self.end_game()
-            # prikazi neki messagebox npr za ove info
-            print("Kraj igre")
-
             if len(self.game_state.x_player_fields) > len(self.game_state.o_player_fields):
-                print("Pobednik X")
+                messagebox.showinfo(
+                    title="Igra je zavrsena",
+                    message="Pobednik je X!\n\n"
+                            f"X je zauzeo: {len(self.game_state.x_player_fields)} polja\n"
+                            f"O je zauzeo: {len(self.game_state.o_player_fields)} polja\n"
+                )
+                self.end_game()
             elif len(self.game_state.x_player_fields) < len(self.game_state.o_player_fields):
-                print("Pobednik O")
+                messagebox.showinfo(
+                    title="Igra je zavrsena",
+                    message="Pobednik je O!\n\n"
+                            f"X je zauzeo: {len(self.game_state.x_player_fields)} polja\n"
+                            f"O je zauzeo: {len(self.game_state.o_player_fields)} polja\n"
+                )
+                self.end_game()
             else:
-                print("Nereseno")
+                messagebox.showinfo(
+                    title="Igra je zavrsena",
+                    message="Nereseno je!\n\n"
+                            f"X je zauzeo: {len(self.game_state.x_player_fields)} polja\n"
+                            f"O je zauzeo: {len(self.game_state.o_player_fields)} polja\n"
+                )
+                self.end_game()
 
 
     def display_current_game_state(self):
