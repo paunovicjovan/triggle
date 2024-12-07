@@ -13,7 +13,6 @@ class GameState:
 
         # svaka razvucena gumica u formatu (slovo, broj, smer) npr. (A, 1, "DD")
         # smerovi mogu da budu: "D" - Desno, "DD" - Dole Desno, "DL" - Dole Levo
-        self.rubber_positions = set()
 
         # popunjene stranice trouglica u formatu (T1, T2) npr. ((A,1), (B,2))
         # druga tacka je uvek desno ili dole desno ili dole levo u odnosu na prvu
@@ -38,7 +37,6 @@ class GameState:
         # duboko kopiranje za atribute koji se menjaju
         new_instance.x_player_fields = set(self.x_player_fields)
         new_instance.o_player_fields = set(self.o_player_fields)
-        new_instance.rubber_positions = set(self.rubber_positions)
         new_instance.completed_sides = set(self.completed_sides)
         new_instance.human_or_computer = self.human_or_computer
         new_instance.x_or_o = self.x_or_o

@@ -3,8 +3,8 @@ def is_move_valid(start_pillar, direction, game_state):
     letter, number = start_pillar
     end_pillar_position = find_end_pillar(start_pillar, direction, game_state.table_size)
 
-    # ako je krajnji stubic izvan table ili je od te pozicije u tom smeru vec razvucena gumica, potez je nevalidan
-    if end_pillar_position not in game_state.pillars or (letter, number, direction) in game_state.rubber_positions:
+    # ako je krajnji stubic izvan table potez je nevalidan
+    if end_pillar_position not in game_state.pillars:
         return False
 
     completed_sides = find_completed_sides(start_pillar, direction, game_state)
@@ -197,11 +197,6 @@ def sort_three_pillars_clockwise(p1,p2,p3):
         return left, right, single_pillar
 
 def change_game_state(start_pillar, direction, game_state):
-    letter, number = start_pillar
-
-    # dodajemo gumicu celom duzinom
-    game_state.rubber_positions.add((letter, number, direction))
-
     # dodajemo stranice trouglica koje je postavljena gumica formirala
     for completed_side in find_completed_sides(start_pillar, direction, game_state):
         game_state.completed_sides.add(completed_side)

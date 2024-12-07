@@ -448,7 +448,5 @@ class GameUI:
         for t1, t2, t3 in self.game_state.o_player_fields:
             self.occupy_triangle(t1, t2, t3, "o")
 
-        for letter, number, direction in self.game_state.rubber_positions:
-            start_pillar = (letter, number)
-            end_pillar = game_logic.find_end_pillar(start_pillar, direction, self.game_state.table_size)
-            self.draw_rubber(start_pillar, end_pillar)
+        for t1, t2 in self.game_state.completed_sides:
+            self.draw_rubber(t1, t2)
