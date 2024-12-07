@@ -1,5 +1,3 @@
-from node import Node
-from game_state import GameState
 
 def is_move_valid(start_pillar, direction, game_state):
     letter, number = start_pillar
@@ -232,21 +230,14 @@ def find_all_possible_moves(game_state):
 
     return all_possible_moves
 
-# ne radi jos, izvrsava se beskonacno
-def find_all_game_states(game_state):
-    node = Node(game_state)
 
-    all_possible_moves = find_all_possible_moves(game_state)
-    print(all_possible_moves)
-    # ako nema mogucih poteza tu je kraj
-    for move in all_possible_moves:
+def find_all_game_states(game_state):
+    result = []
+
+    for move in find_all_possible_moves(game_state):
         letter, number, direction = move
         new_state = game_state.clone()
         change_game_state((letter, number), direction, new_state)
-        node.add_child(new_state)
+        result.append(new_state)
 
-        # (ne znam da li treba da se proveri da nije game over u new_state pa da se ne poziva dalje generisanje)
-        find_all_game_states(new_state)
-
-
-    return node
+    return result

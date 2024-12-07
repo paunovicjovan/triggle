@@ -268,7 +268,7 @@ class GameUI:
             self.canvas.itemconfig(tag, state="disabled") # disejbluje sve elemente na canvasu
             self.canvas.tag_unbind(tag, "<Button-1>") # i uklanja im dogadjaje
 
-        # birsanje labele ko je na potezu
+        # brisanje labele ko je na potezu
         if self.status_label:
             self.status_label.destroy()
             self.status_label = None
@@ -438,30 +438,7 @@ class GameUI:
             self.o_fields_label.config(text=f"O zauzeo: {len(self.game_state.o_player_fields)}")
 
         if game_logic.is_game_over(self.game_state):
-            if len(self.game_state.x_player_fields) > len(self.game_state.o_player_fields):
-                messagebox.showinfo(
-                    title="Igra je zavrsena",
-                    message="Pobednik je X!\n\n"
-                            f"X je zauzeo: {len(self.game_state.x_player_fields)} polja\n"
-                            f"O je zauzeo: {len(self.game_state.o_player_fields)} polja\n"
-                )
-                self.end_game()
-            elif len(self.game_state.x_player_fields) < len(self.game_state.o_player_fields):
-                messagebox.showinfo(
-                    title="Igra je zavrsena",
-                    message="Pobednik je O!\n\n"
-                            f"X je zauzeo: {len(self.game_state.x_player_fields)} polja\n"
-                            f"O je zauzeo: {len(self.game_state.o_player_fields)} polja\n"
-                )
-                self.end_game()
-            else:
-                messagebox.showinfo(
-                    title="Igra je zavrsena",
-                    message="Nereseno je!\n\n"
-                            f"X je zauzeo: {len(self.game_state.x_player_fields)} polja\n"
-                            f"O je zauzeo: {len(self.game_state.o_player_fields)} polja\n"
-                )
-                self.end_game()
+            self.end_game()
 
 
     def display_current_game_state(self):
