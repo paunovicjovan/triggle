@@ -11,9 +11,6 @@ class GameState:
         self.x_player_fields = set()
         self.o_player_fields = set()
 
-        # svaka razvucena gumica u formatu (slovo, broj, smer) npr. (A, 1, "DD")
-        # smerovi mogu da budu: "D" - Desno, "DD" - Dole Desno, "DL" - Dole Levo
-
         # popunjene stranice trouglica u formatu (T1, T2) npr. ((A,1), (B,2))
         # druga tacka je uvek desno ili dole desno ili dole levo u odnosu na prvu
         self.completed_sides = set()
