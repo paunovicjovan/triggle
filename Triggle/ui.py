@@ -1,3 +1,5 @@
+from time import sleep
+
 import game_logic
 from game_state import GameState
 import math
@@ -29,7 +31,7 @@ class GameUI:
         # ove promenljive koje se zavrsavaju sa var su za vezane ui elemente
         # game state svakako ima svoje odgovarajuce atribute
         self.table_size_var = tk.IntVar(value=self.game_state.table_size) # Broj stubica po stranici table
-        self.human_or_computer_var = tk.StringVar(value="human") # po defaultu human
+        self.human_or_computer_var = tk.StringVar(value="human_vs_human") # po defaultu human_vs_human
         self.x_or_o_var = tk.StringVar(value="X")  # po defaultu X
 
         self.pillar_radius = 10 # poluprecnik stubica
@@ -51,8 +53,9 @@ class GameUI:
         self.canvas = None
         self.start_button = None
         self.end_button = None
-        self.human_radio = None
-        self.computer_radio = None
+        self.human_vs_human_radio = None
+        self.human_vs_computer_radio = None
+        self.computer_vs_human_radio = None
         self.x_radio = None
         self.o_radio = None
         self.side_length_dropdown = None
@@ -82,27 +85,36 @@ class GameUI:
         self.side_length_dropdown.place(x=30, y=80)
 
         # Deo za izbor ko igra prvi covek ili racunar
-        title2 = tk.Label(self.options_frame, text="Ko igra prvi:", font=("Emotion Engine Italic", 22))
+        title2 = tk.Label(self.options_frame, text="Nacin igranja:", font=("Emotion Engine Italic", 22))
         title2.place(x=30, y=180)
 
-        self.human_radio = tk.Radiobutton(
+        self.human_vs_human_radio = tk.Radiobutton(
             self.options_frame,
-            text="Covek",
+            text="Čovek vs Čovek",
             variable=self.human_or_computer_var,
-            value="human",
+            value="human_vs_human",
             font=("Emotion Engine Italic", 18)
         )
-        self.computer_radio = tk.Radiobutton(
+        self.human_vs_computer_radio = tk.Radiobutton(
             self.options_frame,
-            text="Racunar",
+            text="Čovek vs Računar",
             variable=self.human_or_computer_var,
-            value="computer",
+            value="human_vs_computer",
             font=("Emotion Engine Italic", 18)
         )
-        self.human_radio.place(x=30, y=230)
-        self.computer_radio.place(x=150, y=230)
 
-        #Deo za izbor koji simbol je prvi X ili O
+        self.computer_vs_human_radio = tk.Radiobutton(
+            self.options_frame,
+            text="Računar vs Čovek",
+            variable=self.human_or_computer_var,
+            value="computer_vs_human",
+            font=("Emotion Engine Italic", 18)
+        )
+        self.human_vs_human_radio.place(x=30, y=230)
+        self.human_vs_computer_radio.place(x=230, y=230)
+        self.computer_vs_human_radio.place(x=30, y=260)
+
+        # Deo za izbor koji simbol je prvi X ili O
         title3 = tk.Label(self.options_frame, text="Pocetni simbol:", font=("Emotion Engine Italic", 22))
         title3.place(x=30, y=300)
         self.x_radio = tk.Radiobutton(
@@ -224,8 +236,9 @@ class GameUI:
 
     def start_game(self):
         self.start_button.place_forget()
-        self.human_radio.config(state="disabled")
-        self.computer_radio.config(state="disabled")
+        self.human_vs_human_radio.config(state="disabled")
+        self.computer_vs_human_radio.config(state="disabled")
+        self.human_vs_computer_radio.config(state="disabled")
         self.x_radio.config(state="disabled")
         self.o_radio.config(state="disabled")
         self.side_length_dropdown.config(state="disabled")
@@ -252,12 +265,13 @@ class GameUI:
     def end_game(self):
         self.end_button.place_forget() # sakrije dugme za zavrsetak
         self.start_button.place(x=30, y=420)
-        self.human_radio.config(state="normal")
-        self.computer_radio.config(state="normal")
+        self.human_vs_human_radio.config(state="normal")
+        self.computer_vs_human_radio.config(state="normal")
+        self.human_vs_computer_radio.config(state="normal")
         self.x_radio.config(state="normal")
         self.o_radio.config(state="normal")
         self.side_length_dropdown.config(state="normal")
-        self.human_or_computer_var.set("human") # resetuje radio button
+        self.human_or_computer_var.set("human_vs_human") # resetuje radio button
         self.x_or_o_var.set("X")
         self.table_size_var.set(4) # resetuje dropdown
         self.game_state.game_started = False
@@ -417,6 +431,7 @@ class GameUI:
 
         # promena stanja igre i bojenje formiranih trouglica
         triangles_to_occupy = game_logic.change_game_state(pillar_position, direction, self.game_state)
+
         for triangle in triangles_to_occupy:
             t1, t2, t3 = triangle
             # uslovi su obrnuti jer se stanje vec promenilo pa je protivnik na potezu
@@ -426,6 +441,12 @@ class GameUI:
             else:
                 # ako je X na potezu onda je trouglice prethodno zauzeo O
                 self.occupy_triangle(t1, t2, t3, "O")
+
+        best_move = game_logic.minimax(self.game_state, 3, False)
+        print(best_move)
+        letter, number, direction = best_move[0]
+        game_logic.change_game_state((letter,number), direction, self.game_state)
+        self.display_current_game_state()
 
         # labela za prikaz ko je na potezu i ko je zauzeo koliko polja
         if self.status_label:

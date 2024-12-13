@@ -18,7 +18,7 @@ class GameState:
         # broj stubica po stranici table
         self.table_size = table_size
 
-        self.human_or_computer = "human" # "human" | "computer"
+        self.human_or_computer = "human_vs_human" # "human_vs_human" | "human_vs_computer" | "computer_vs_human"
         self.x_or_o = "X" # "X" | "O"
         self.game_started = False
 
