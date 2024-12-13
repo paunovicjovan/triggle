@@ -238,37 +238,7 @@ def find_all_game_states(game_state):
     return result
 
 def evaluate_state(game_state):
-    difference = len(game_state.x_player_fields) - len(game_state.o_player_fields)
-
-    # mozda ne treba
-    # if is_game_over(game_state):
-    #     return 1000 if difference > 0 else -1000
-    if game_state.x_or_o == "X" or game_state.x_or_o == "x":
-        return difference
-    else:
-        return -difference
-
-# def max_value(state, depth, alpha, beta):
-#     new_states = find_all_game_states(state)
-#     if depth == 0 or new_states is None or len(new_states)==0:
-#         return state, evaluate_state(state)
-#     else:
-#         for s in new_states:
-#             alpha = max(alpha, min_value(s, depth - 1, alpha, beta), key = lambda x: x[1])
-#             if alpha[1] >= beta[1]:
-#                 return beta
-#     return alpha
-#
-# def min_value(state, depth, alpha, beta):
-#     new_states = find_all_game_states(state)
-#     if depth == 0 or new_states is None or len(new_states)==0:
-#         return state, evaluate_state(state)
-#     else:
-#         for s in new_states:
-#             beta = min(beta, max_value(s, depth - 1, alpha, beta), key=lambda x: x[1])
-#             if beta[1] <= alpha[1]:
-#                 return alpha
-#     return beta
+    return len(game_state.x_player_fields) - len(game_state.o_player_fields)
 
 def max_value(state, depth, alpha, beta, move=None):
     # if abs(kraj(stanje)) == 10 or full(stanje):

@@ -262,6 +262,9 @@ class GameUI:
         self.o_fields_label = tk.Label(self.options_frame, text=f"O zauzeo: {len(self.game_state.o_player_fields)}", font=("Emotion Engine Italic", 18))
         self.o_fields_label.place(x=320, y=130)
 
+        if self.game_state.human_or_computer == "computer_vs_human":
+            self.play_computer_move()
+
     def end_game(self):
         self.end_button.place_forget() # sakrije dugme za zavrsetak
         self.start_button.place(x=30, y=420)
@@ -421,46 +424,29 @@ class GameUI:
         # ako je pozvana ova funkcija, potez je sigurno validan
 
         # sklonimo highlight sa kliknutog stubica i dugmice za smerove poteza
-        self.canvas.itemconfig(self.clicked_pillar, fill="white")
-        self.clicked_pillar = None
-        self.remove_direction_buttons()
+        if self.clicked_pillar:
+            self.canvas.itemconfig(self.clicked_pillar, fill="white")
+            self.clicked_pillar = None
+            self.remove_direction_buttons()
 
-        # crtanje razvucene gumice
-        end_pillar = game_logic.find_end_pillar(pillar_position, direction, self.game_state.table_size)
-        self.draw_rubber(pillar_position, end_pillar)
-
-        # promena stanja igre i bojenje formiranih trouglica
-        triangles_to_occupy = game_logic.change_game_state(pillar_position, direction, self.game_state)
-
-        for triangle in triangles_to_occupy:
-            t1, t2, t3 = triangle
-            # uslovi su obrnuti jer se stanje vec promenilo pa je protivnik na potezu
-            if self.game_state.x_or_o == "O":
-                # ako je sada O na potezu, znaci da je trouglice prethodno zauzeo X
-                self.occupy_triangle(t1,t2,t3, "X")
-            else:
-                # ako je X na potezu onda je trouglice prethodno zauzeo O
-                self.occupy_triangle(t1, t2, t3, "O")
-
-        best_move = game_logic.minimax(self.game_state, 3, False)
-        print(best_move)
-        letter, number, direction = best_move[0]
-        game_logic.change_game_state((letter,number), direction, self.game_state)
+        # promena stanja igre
+        game_logic.change_game_state(pillar_position, direction, self.game_state)
         self.display_current_game_state()
+        self.canvas.update_idletasks()
 
-        # labela za prikaz ko je na potezu i ko je zauzeo koliko polja
-        if self.status_label:
-            self.status_label.config(text=f"Na potezu: {self.game_state.x_or_o}")
-
-        if self.x_fields_label:
-            self.x_fields_label.config(text=f"X zauzeo: {len(self.game_state.x_player_fields)}")
-
-        if self.o_fields_label:
-            self.o_fields_label.config(text=f"O zauzeo: {len(self.game_state.o_player_fields)}")
+        if self.game_state.human_or_computer == "human_vs_computer" or self.game_state.human_or_computer == "computer_vs_human":
+            self.play_computer_move()
 
         if game_logic.is_game_over(self.game_state):
             self.end_game()
 
+    def play_computer_move(self):
+        move = True if self.game_state.x_or_o == "X" or self.game_state.x_or_o == "x" else False
+        best_move = game_logic.minimax(self.game_state, 4, move)
+        print(best_move)
+        letter, number, direction = best_move[0]
+        game_logic.change_game_state((letter, number), direction, self.game_state)
+        self.display_current_game_state()
 
     def display_current_game_state(self):
         for t1,t2,t3 in self.game_state.x_player_fields:
@@ -471,3 +457,13 @@ class GameUI:
 
         for t1, t2 in self.game_state.completed_sides:
             self.draw_rubber(t1, t2)
+
+        # labela za prikaz ko je na potezu i ko je zauzeo koliko polja
+        if self.status_label:
+            self.status_label.config(text=f"Na potezu: {self.game_state.x_or_o}")
+
+        if self.x_fields_label:
+            self.x_fields_label.config(text=f"X zauzeo: {len(self.game_state.x_player_fields)}")
+
+        if self.o_fields_label:
+            self.o_fields_label.config(text=f"O zauzeo: {len(self.game_state.o_player_fields)}")
