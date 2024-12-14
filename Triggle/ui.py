@@ -86,7 +86,7 @@ class GameUI:
 
         # Deo za izbor ko igra prvi covek ili racunar
         title2 = tk.Label(self.options_frame, text="Nacin igranja:", font=("Emotion Engine Italic", 22))
-        title2.place(x=30, y=180)
+        title2.place(x=30, y=160)
 
         self.human_vs_human_radio = tk.Radiobutton(
             self.options_frame,
@@ -110,13 +110,13 @@ class GameUI:
             value="computer_vs_human",
             font=("Emotion Engine Italic", 18)
         )
-        self.human_vs_human_radio.place(x=30, y=230)
-        self.human_vs_computer_radio.place(x=230, y=230)
-        self.computer_vs_human_radio.place(x=30, y=260)
+        self.human_vs_human_radio.place(x=30, y=200)
+        self.human_vs_computer_radio.place(x=30, y=240)
+        self.computer_vs_human_radio.place(x=30, y=280)
 
         # Deo za izbor koji simbol je prvi X ili O
         title3 = tk.Label(self.options_frame, text="Pocetni simbol:", font=("Emotion Engine Italic", 22))
-        title3.place(x=30, y=300)
+        title3.place(x=30, y=340)
         self.x_radio = tk.Radiobutton(
             self.options_frame,
             text="X",
@@ -131,8 +131,8 @@ class GameUI:
             value="O",
             font=("Emotion Engine Italic", 18)
         )
-        self.x_radio.place(x=30, y=350)
-        self.o_radio.place(x=100, y=350)
+        self.x_radio.place(x=30, y=370)
+        self.o_radio.place(x=100, y=370)
 
         #Dugme za pocetak igre
         self.start_button = tk.Button(self.options_frame, text="Zapocni igru", command=self.start_game, font=("Emotion Engine Italic", 18), bg="#32cd32")
@@ -442,7 +442,7 @@ class GameUI:
 
     def play_computer_move(self):
         move = True if self.game_state.x_or_o == "X" or self.game_state.x_or_o == "x" else False
-        best_move = game_logic.minimax(self.game_state, 4, move)
+        best_move = game_logic.minimax(self.game_state, 3, move)
         print(best_move)
         letter, number, direction = best_move[0]
         game_logic.change_game_state((letter, number), direction, self.game_state)
