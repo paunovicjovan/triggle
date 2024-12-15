@@ -46,6 +46,14 @@ class GameUI:
             8: 65
         }
 
+        self.minmax_depths = {
+            4: 5,
+            5: 4,
+            6: 4,
+            7: 3,
+            8: 3
+        }
+
         self.hexagon_diagonal_length = 6 * self.triangle_sides[self.game_state.table_size] # dijagonala sestougla koji formiraju stubici, ne pozadine
         self.hexagon_padding = 30 # razmak od stubica do temena hexagona
 
@@ -139,9 +147,9 @@ class GameUI:
         self.start_button.place(x=30, y=420)
 
         # Dugme za zavrsetak igre
-        if self.game_state.game_started:
-            self.end_button = tk.Button(self.options_frame, text="Zavrsi igru", command=self.end_game, font=("Emotion Engine Italic", 18), bg="#ff2c2c")
-            self.end_button.place(x=30, y=500)
+        # if self.game_state.game_started:
+        #     self.end_button = tk.Button(self.options_frame, text="Zavrsi igru", command=self.end_game, font=("Emotion Engine Italic", 18), bg="#ff2c2c")
+        #     self.end_button.place(x=30, y=500)
 
         self.root.mainloop()
 
@@ -220,6 +228,8 @@ class GameUI:
                 first_x += triangle_side / 2
                 pillars_in_row_count -= 1
 
+        self.game_state.initialize_all_possible_moves()
+
     def on_pillar_click(self, event):
         if self.clicked_pillar:
             self.canvas.itemconfig(self.clicked_pillar, fill="white")
@@ -246,7 +256,6 @@ class GameUI:
         self.game_state = GameState(self.table_size_var.get())
         self.game_state.human_or_computer = self.human_or_computer_var.get()
         self.game_state.x_or_o = self.x_or_o_var.get()
-        self.game_state.game_started = True
 
         self.generate_table()
 
@@ -277,7 +286,7 @@ class GameUI:
         self.human_or_computer_var.set("human_vs_human") # resetuje radio button
         self.x_or_o_var.set("X")
         self.table_size_var.set(4) # resetuje dropdown
-        self.game_state.game_started = False
+        # self.game_state.game_started = False
         self.clicked_pillar = None
 
         # disable canvas
@@ -431,6 +440,9 @@ class GameUI:
 
         # promena stanja igre
         game_logic.change_game_state(pillar_position, direction, self.game_state)
+        letter, number = pillar_position
+        self.game_state.all_possible_moves.remove((letter, number, direction))
+        self.display_current_game_state()
         self.display_current_game_state()
         self.canvas.update_idletasks()
 
@@ -442,10 +454,14 @@ class GameUI:
 
     def play_computer_move(self):
         move = True if self.game_state.x_or_o == "X" or self.game_state.x_or_o == "x" else False
-        best_move = game_logic.minimax(self.game_state, 3, move)
+        best_move = game_logic.minimax(self.game_state, self.minmax_depths[self.game_state.table_size], move)
+        if not best_move:
+            return
         print(best_move)
         letter, number, direction = best_move[0]
         game_logic.change_game_state((letter, number), direction, self.game_state)
+        # izbacujemo odigran potez iz mogucih za igranje
+        self.game_state.all_possible_moves.remove((letter, number, direction))
         self.display_current_game_state()
 
     def display_current_game_state(self):

@@ -1,4 +1,4 @@
-import copy
+import game_logic
 
 class GameState:
     def __init__(self, table_size):
@@ -20,7 +20,7 @@ class GameState:
 
         self.human_or_computer = "human_vs_human" # "human_vs_human" | "human_vs_computer" | "computer_vs_human"
         self.x_or_o = "X" # "X" | "O"
-        self.game_started = False
+        # self.game_started = False
 
         self.letters = [chr(x+65) for x in range(0, 2 * self.table_size - 1)]
         self.numbers = [x + 1 for x in range(0, 2 * self.table_size - 1)]
@@ -28,6 +28,11 @@ class GameState:
 
         self.pillars = dict()  # ovde ce da budu sacuvane oznake
                                # i koordinate centra stubica npr. ("A",1): (x,y)
+
+        self.all_possible_moves = set()
+
+    def initialize_all_possible_moves(self):
+        self.all_possible_moves = game_logic.find_all_possible_moves(self)
 
     def clone(self):
         new_instance = GameState(self.table_size)
@@ -37,12 +42,13 @@ class GameState:
         new_instance.completed_sides = set(self.completed_sides)
         new_instance.human_or_computer = self.human_or_computer
         new_instance.x_or_o = self.x_or_o
-        new_instance.game_started = self.game_started
+        # new_instance.game_started = self.game_started
 
         # plitko kopiranje za atribute koji su u svakom game state-u isti
         new_instance.letters = self.letters
         new_instance.numbers = self.numbers
         new_instance.all_directions = self.all_directions
         new_instance.pillars = self.pillars
+        new_instance.all_possible_moves = self.all_possible_moves
 
         return new_instance

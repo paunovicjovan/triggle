@@ -240,42 +240,44 @@ def find_all_game_states(game_state):
 def evaluate_state(game_state):
     return len(game_state.x_player_fields) - len(game_state.o_player_fields)
 
-def max_value(state, depth, alpha, beta, move=None):
-    # if abs(kraj(stanje)) == 10 or full(stanje):
-    #     return (potez, kraj(stanje))
+def max_value(state, depth, alpha, beta, possible_moves, move=None):
+    if is_game_over(state):
+        return move, evaluate_state(state)
 
-    all_possible_moves = find_all_possible_moves(state)
-    if depth == 0 or all_possible_moves is None or len(all_possible_moves) == 0:
+    if depth == 0 or possible_moves is None or len(possible_moves) == 0:
         return move, evaluate_state(state)
     else:
-        for s in all_possible_moves:
+        for s in possible_moves:
             letter, number, direction = s
+            new_possible_moves = possible_moves.copy()
+            new_possible_moves.remove(s)
             new_state = state.clone()
             change_game_state((letter, number), direction, new_state)
             alpha = max(
                 alpha,
-                min_value(new_state, depth - 1, alpha, beta, s if move is None else move),
+                min_value(new_state, depth - 1, alpha, beta, new_possible_moves, s if move is None else move),
                 key=lambda x: x[1]
             )
             if alpha[1] >= beta[1]:
                 return beta
         return alpha
 
-def min_value(state, depth, alpha, beta, move=None):
-    # if abs(kraj(stanje)) == 10 or full(stanje):
-    #     return (potez, kraj(stanje))
+def min_value(state, depth, alpha, beta, possible_moves, move=None):
+    if is_game_over(state):
+        return move, evaluate_state(state)
 
-    all_possible_moves = find_all_possible_moves(state)
-    if depth == 0 or all_possible_moves is None or len(all_possible_moves) == 0:
+    if depth == 0 or possible_moves is None or len(possible_moves) == 0:
         return move, evaluate_state(state)
     else:
-        for s in all_possible_moves:
+        for s in possible_moves:
             letter, number, direction = s
+            new_possible_moves = possible_moves.copy()
+            new_possible_moves.remove(s)
             new_state = state.clone()
             change_game_state((letter, number), direction, new_state)
             beta = min(
                 beta,
-                max_value(new_state, depth - 1, alpha, beta, s if move is None else move),
+                max_value(new_state, depth - 1, alpha, beta, new_possible_moves, s if move is None else move),
                 key=lambda x: x[1]
             )
             if beta[1] <= alpha[1]:
@@ -285,6 +287,6 @@ def min_value(state, depth, alpha, beta, move=None):
 
 def minimax(state, depth, is_my_move, alpha=(None, -1000), beta=(None, 1000)):
     if is_my_move:
-        return max_value(state, depth, alpha, beta)
+        return max_value(state, depth, alpha, beta, state.all_possible_moves)
     else:
-        return min_value(state, depth, alpha, beta)
+        return min_value(state, depth, alpha, beta, state.all_possible_moves)
