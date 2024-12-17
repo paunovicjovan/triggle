@@ -439,11 +439,10 @@ class GameUI:
             self.remove_direction_buttons()
 
         # promena stanja igre
-        game_logic.change_game_state(pillar_position, direction, self.game_state)
+        player, triangles, sides = game_logic.change_game_state(pillar_position, direction, self.game_state)
         letter, number = pillar_position
         self.game_state.all_possible_moves.remove((letter, number, direction))
-        self.display_current_game_state()
-        self.display_current_game_state()
+        self.display_state_changes(player, triangles, sides)
         self.canvas.update_idletasks()
 
         if self.game_state.human_or_computer == "human_vs_computer" or self.game_state.human_or_computer == "computer_vs_human":
@@ -455,14 +454,23 @@ class GameUI:
     def play_computer_move(self):
         move = True if self.game_state.x_or_o == "X" or self.game_state.x_or_o == "x" else False
         best_move = game_logic.minimax(self.game_state, self.minmax_depths[self.game_state.table_size], move)
-        if not best_move:
+        if not best_move[0]:
             return
         print(best_move)
         letter, number, direction = best_move[0]
-        game_logic.change_game_state((letter, number), direction, self.game_state)
+        player, triangles, sides = game_logic.change_game_state((letter, number), direction, self.game_state)
         # izbacujemo odigran potez iz mogucih za igranje
         self.game_state.all_possible_moves.remove((letter, number, direction))
-        self.display_current_game_state()
+        self.display_state_changes(player, triangles, sides)
+
+    def display_state_changes(self, player, triangles_to_occupy, completed_sides):
+        for t1, t2 in completed_sides:
+            self.draw_rubber(t1, t2)
+
+        for t1,t2,t3 in triangles_to_occupy:
+            self.occupy_triangle(t1,t2,t3,player)
+
+        self.show_score()
 
     def display_current_game_state(self):
         for t1,t2,t3 in self.game_state.x_player_fields:
@@ -474,6 +482,9 @@ class GameUI:
         for t1, t2 in self.game_state.completed_sides:
             self.draw_rubber(t1, t2)
 
+        self.show_score()
+
+    def show_score(self):
         # labela za prikaz ko je na potezu i ko je zauzeo koliko polja
         if self.status_label:
             self.status_label.config(text=f"Na potezu: {self.game_state.x_or_o}")

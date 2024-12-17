@@ -198,8 +198,10 @@ def sort_three_pillars_clockwise(p1,p2,p3):
 
 def change_game_state(start_pillar, direction, game_state):
     # dodajemo stranice trouglica koje je postavljena gumica formirala
-    for completed_side in find_completed_sides(start_pillar, direction, game_state):
+    completed_sides = find_completed_sides(start_pillar, direction, game_state)
+    for completed_side in completed_sides:
         game_state.completed_sides.add(completed_side)
+
 
     # dodajemo trouglice koji su formirani
     triangles_to_occupy = find_triangles_to_occupy(start_pillar, direction, game_state)
@@ -209,11 +211,12 @@ def change_game_state(start_pillar, direction, game_state):
         else:
             game_state.o_player_fields.add(triangle)
 
+    old_player = game_state.x_or_o
     # menjamo ko je na potezu
-    game_state.x_or_o = "X" if game_state.x_or_o == "O" else "O"
+    game_state.x_or_o = "X" if old_player == "O" else "O"
 
     # vratimo trouglice koje ui treba da oboji
-    return triangles_to_occupy
+    return old_player, triangles_to_occupy, completed_sides
 
 def find_all_possible_moves(game_state):
     all_possible_moves = []
