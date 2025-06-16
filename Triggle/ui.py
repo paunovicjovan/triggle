@@ -47,7 +47,7 @@ class GameUI:
         }
 
         self.minmax_depths = {
-            4: 5,
+            4: 4,
             5: 4,
             6: 4,
             7: 3,
@@ -442,6 +442,11 @@ class GameUI:
         player, triangles, sides = game_logic.change_game_state(pillar_position, direction, self.game_state)
         letter, number = pillar_position
         self.game_state.all_possible_moves.remove((letter, number, direction))
+        # izbacivanje nevalidnih poteza
+        self.game_state.all_possible_moves = [
+            move for move in self.game_state.all_possible_moves
+            if game_logic.is_move_valid((move[0], move[1]), move[2], self.game_state)
+        ]
         self.display_state_changes(player, triangles, sides)
         self.canvas.update_idletasks()
 
